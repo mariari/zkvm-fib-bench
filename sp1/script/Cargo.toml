@@ -1,0 +1,22 @@
+[package]
+name = "fibonacci-script"
+version = "0.1.0"
+edition = "2021"
+default-run = "fibonacci-script"
+publish = false
+
+# Standalone (detached from any parent workspace).
+[workspace]
+
+[dependencies]
+sp1-sdk = "6.3.1"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+hex = "0.4.3"
+
+[build-dependencies]
+sp1-build = "6.3.1"
+
+[[bin]]
+name = "fibonacci-script"
+path = "src/main.rs"

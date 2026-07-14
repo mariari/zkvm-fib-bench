@@ -1,0 +1,11 @@
+[package]
+name = "fibonacci-program"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Standalone (detached from any parent workspace) so it builds anywhere.
+[workspace]
+
+[dependencies]
+sp1-zkvm = "6.3.1"

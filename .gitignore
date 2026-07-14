@@ -1,0 +1,15 @@
+# Rust build artifacts
+target/
+**/target/
+
+# Proof / benchmark outputs
+*.bin
+proof-*.bin
+benchmark_*results.csv
+
+# Env / secrets
+.env
+.env.*
+
+# OS junk
+.DS_Store
