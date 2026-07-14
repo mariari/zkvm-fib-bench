@@ -79,3 +79,18 @@ Groth16 wrap (risc0): 196.5 s prove, 3.2 ms verify, **521-byte** proof.
 > zkVM prove times are hardware- and contention-sensitive (risc0 scales with cores;
 > risc0 fib(1000) measured 33 s contended vs 18 s uncontended on the same box). Quote the
 > exact CPU and "uncontended".
+
+## Credits
+
+This is an independent, minimal harness — **not a fork**. The reused pieces are all
+permissively licensed:
+
+- The `fib(n) mod 7919` program and the choice of N values follow the **zkbenchmarks.com**
+  harness by Yet Another Company —
+  [yetanotherco/zkvm_benchmarks](https://github.com/yetanotherco/zkvm_benchmarks) (MIT).
+- Per-VM project scaffolds come from [SP1](https://github.com/succinctlabs/sp1)
+  (Succinct Labs, MIT/Apache-2.0) and [RISC Zero](https://github.com/risc0/risc0)
+  (MIT/Apache-2.0).
+
+This repo's own contribution is the instrumented prove/verify timing hosts, the runner,
+and the analysis in `RESULTS.md`. Licensed MIT (see `LICENSE`).
