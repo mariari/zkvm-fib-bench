@@ -4,8 +4,9 @@
 // .compressed() / .groth16()), but ADDS what the site omits: it times prove
 // and verify separately and reports cycle count + proof sizes.
 //
-// Usage: cargo run --release -- <n> [core|compressed|groth16|plonk]
-//        (defaults: n=10000, compressed)
+// Usage: cargo run --release -- <n> [core|compressed|groth16|plonk][+fastdbl]
+//        (defaults: n=10000, compressed). The `+fastdbl` suffix switches the
+//        guest from the linear recurrence to fast doubling (same journal).
 use sp1_sdk::prelude::*;
 use sp1_sdk::ProverClient;
 use std::time::Instant;
@@ -24,8 +25,13 @@ async fn main() {
         .map(|s| s.to_lowercase())
         .unwrap_or_else(|| "compressed".to_string());
 
+    // `<prover>+fastdbl` selects the fast-doubling guest algorithm.
+    let algo: u32 = mode.ends_with("+fastdbl") as u32;
+    let prover_mode = mode.trim_end_matches("+fastdbl");
+
     let mut stdin = SP1Stdin::new();
     stdin.write(&n);
+    stdin.write(&algo);
 
     let client = ProverClient::from_env().await;
 
@@ -41,7 +47,7 @@ async fn main() {
 
     // ---- prove ----
     let t = Instant::now();
-    let proof = match mode.as_str() {
+    let proof = match prover_mode {
         "core" => client.prove(&pk, stdin.clone()).core().await.unwrap(),
         "compressed" => client.prove(&pk, stdin.clone()).compressed().await.unwrap(),
         "groth16" => client.prove(&pk, stdin.clone()).groth16().await.unwrap(),
@@ -60,7 +66,7 @@ async fn main() {
         Err(_) => 0,
     };
     // on-chain proof size is only meaningful for the SNARK modes
-    let onchain_bytes: u64 = if mode == "groth16" || mode == "plonk" {
+    let onchain_bytes: u64 = if prover_mode == "groth16" || prover_mode == "plonk" {
         proof.bytes().len() as u64
     } else {
         0

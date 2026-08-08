@@ -4,7 +4,9 @@
 // ProverOpts::succinct()), but ADDS what the site omits: it times prove and
 // verify separately and reports proof size + guest cycle stats.
 //
-// Usage: host <n> [succinct|composite|groth16]   (defaults: n=10000, succinct)
+// Usage: host <n> [succinct|composite|groth16][+fastdbl]
+//        (defaults: n=10000, succinct). The `+fastdbl` suffix switches the guest
+//        from the linear recurrence to fast doubling (same journal, ~log n work).
 use methods::{METHOD_ELF, METHOD_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv, ProverOpts};
 use std::time::Instant;
@@ -21,7 +23,11 @@ fn main() {
         .map(|s| s.to_lowercase())
         .unwrap_or_else(|| "succinct".to_string());
 
-    let opts = match mode.as_str() {
+    // `<prover>+fastdbl` selects the fast-doubling guest algorithm.
+    let algo: u32 = mode.ends_with("+fastdbl") as u32;
+    let prover_mode = mode.trim_end_matches("+fastdbl");
+
+    let opts = match prover_mode {
         "composite" => ProverOpts::composite(),
         "succinct" => ProverOpts::succinct(),
         "groth16" => ProverOpts::groth16(),
@@ -31,7 +37,13 @@ fn main() {
         }
     };
 
-    let env = ExecutorEnv::builder().write(&n).unwrap().build().unwrap();
+    let env = ExecutorEnv::builder()
+        .write(&n)
+        .unwrap()
+        .write(&algo)
+        .unwrap()
+        .build()
+        .unwrap();
     let prover = default_prover();
 
     // ---- prove ----
