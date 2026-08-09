@@ -38,6 +38,10 @@ curl -L https://sp1up.succinct.xyz | bash && sp1up
 ./run_fib.sh                 # fib(10000), STARK: risc0 succinct + sp1 compressed
 ./run_fib.sh 10000 snark     # Groth16 SNARK for both (needs Docker running)
 ./run_fib.sh 100000 both     # STARK + SNARK at N=100000
+
+./bench_all.sh               # full (system, mode, n) sweep, 3 reps, median + peak RSS
+./bench_all.sh 1             # same sweep, 1 rep
+WRAP=1 ./bench_all.sh        # additionally run the groth16 cells (needs Docker)
 ```
 
 `run_fib.sh` builds each project on first use, then prints one `BENCH …` line per VM:
@@ -47,7 +51,22 @@ BENCH risc0 mode=succinct   n=10000 prove_s=42.634 verify_ms=12.280 proof_bytes=
 BENCH sp1   mode=compressed n=10000 prove_s=53.328 verify_ms=34.962 proof_bytes=1272581 ...
 ```
 
+`bench_all.sh` runs every cell sequentially (never two provers at once — compressed peaks at
+~17 GB) and prints one `CELL …` line per cell, adding `peak_rss_kb`.
+
 Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 | plonk`.
+Append a guest-algorithm suffix to any mode:
+
+| suffix | guest | journal |
+|---|---|---|
+| *(none)* | linear recurrence, n iterations | `(n, F(n) mod 7919, F(n+1) mod 7919)` |
+| `+fastdbl` | fast doubling, ~log2(n) iterations | identical to linear — directly comparable |
+| `+bounds` | assert `10 <= x <= 100`, no recurrence | `(x)` |
+
+> ⚠️ **Rebuild after changing a guest.** Both scripts build only when the binary is *absent*,
+> so a binary left from an earlier commit is silently benchmarked instead of your current
+> guest. Run `cargo build --release` in `risc0/` and `sp1/script/` explicitly after any guest
+> change.
 
 ## Layout
 
@@ -56,29 +75,47 @@ Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 
 | `risc0/` | RISC Zero project (guest `methods/guest`, timing host `host/src/main.rs`) — pinned to `risc0-zkvm = 3.0.5` |
 | `sp1/`   | SP1 project (`program/` guest, `script/` timing host) — pinned to `sp1 = 6.3.1` (standalone; no monorepo needed) |
 | `run_fib.sh` | one-shot builder/runner |
+| `bench_all.sh` | full (system, mode, n) sweep: 3 reps, median, peak RSS per cell |
 | `RESULTS.md` | measured numbers + analysis (incl. why this is/isn't a fair comparison vs a specialized prover) |
 
 ## Note: RISC Zero guest builds in Docker
 
-On a bleeding-edge host Rust, the risc0 guest's `borsh-derive` hits a `proc_macro_crate`
+On a bleeding-edge host Rust, the risc0 guest's `borsh-derive` can hit a `proc_macro_crate`
 panic. `run_fib.sh` therefore builds the guest with `RISC0_USE_DOCKER=1` (pinned toolchain,
 reproducible ELF). If your host toolchain is older you can drop that and build natively.
 
+`bench_all.sh` builds **natively** and needs no Docker. That path is verified on host
+rustc 1.97.0 with the rzup guest toolchain — the panic above did not occur — so Docker is
+required only for the groth16 cells (`WRAP=1`), where risc0's stark-to-snark and SP1's gnark
+FFI both shell out to it.
+
 ## Results
 
-See [`RESULTS.md`](RESULTS.md). Headline (fib 10,000, CPU, AMD Ryzen 7 5700X):
+See [`RESULTS.md`](RESULTS.md). Headline (fib 10,000, CPU, AMD Ryzen 7 5700X, uncontended,
+median of 3):
 
 | | RISC Zero (succinct STARK) | SP1 (compressed STARK) |
 |---|---|---|
-| prove | 42.6 s | 53.3 s |
-| verify | 12.3 ms | 35.0 ms |
-| proof size | ~218 KB | ~1.24 MB |
+| prove | 40.7 s | 50.4 s |
+| verify | 12.5 ms | 35.2 ms |
+| proof size | 223 KB | 1.27 MB |
+| peak prover RSS | 2.30 GB | 17.07 GB |
 
-Groth16 wrap (risc0): 196.5 s prove, 3.2 ms verify, **521-byte** proof.
+Matching the algorithm (`+fastdbl`, ~log2 n iterations) barely moves SP1 — 49.2 s compressed —
+while risc0 drops to 14.7 s succinct / 3.7 s composite.
+
+**The floor.** A bare bounds check (`x ∈ [10,100]`, no recurrence, 4,882 SP1 cycles) still
+costs 13.2 s core / 49.2 s compressed on SP1 and 3.7 s composite / 14.7 s succinct on risc0 —
+within a few percent of the n=10,000 figures. risc0 pads every such claim to 32,768 cycles.
+**That floor is the cost of compressing any execution at all, not the cost of the claim.**
+
+Groth16 wrap (risc0, measured earlier, not in this sweep): 196.5 s prove, 3.2 ms verify,
+**521-byte** proof.
 
 > zkVM prove times are hardware- and contention-sensitive (risc0 scales with cores;
 > risc0 fib(1000) measured 33 s contended vs 18 s uncontended on the same box). Quote the
-> exact CPU and "uncontended".
+> exact CPU and "uncontended". Note SP1 compressed peaks near 17 GB RSS — on a box without
+> swap, exceeding RAM is an OOM kill rather than a slowdown, so run cells serially.
 
 ## Credits
 
