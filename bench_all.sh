@@ -128,6 +128,15 @@ cell sp1   core+fastdbl       1000   1200
 cell sp1   core+fastdbl       10000  1200
 cell sp1   compressed+fastdbl 10000  1800
 
+# Bounds check: enforce 10 <= x <= 100 and commit x. Not a fib claim at all --
+# this is the floor workload, the smallest thing worth proving. The n column is
+# reused as x (the guest has no loop count), so 42 below is x, not an iteration
+# count. Groth16 is excluded here as everywhere: it needs Docker.
+cell risc0 composite+bounds  42  900
+cell risc0 succinct+bounds   42  1200
+cell sp1   core+bounds       42  1200
+cell sp1   compressed+bounds 42  1800
+
 # SNARK wraps. Both need Docker (risc0's stark-to-snark and sp1's gnark FFI both
 # shell out to it), and sp1 additionally downloads ~9 GB of circuit artifacts.
 # Off by default because they dominate the sweep's wall time: WRAP=1 ./bench_all.sh

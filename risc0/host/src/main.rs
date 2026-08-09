@@ -4,9 +4,11 @@
 // ProverOpts::succinct()), but ADDS what the site omits: it times prove and
 // verify separately and reports proof size + guest cycle stats.
 //
-// Usage: host <n> [succinct|composite|groth16][+fastdbl]
+// Usage: host <n> [succinct|composite|groth16][+fastdbl|+bounds]
 //        (defaults: n=10000, succinct). The `+fastdbl` suffix switches the guest
 //        from the linear recurrence to fast doubling (same journal, ~log n work).
+//        The `+bounds` suffix runs the bounds check instead, in which case the
+//        first argument is not a loop count but the value x (default 42).
 use methods::{METHOD_ELF, METHOD_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv, ProverOpts};
 use std::time::Instant;
@@ -17,15 +19,26 @@ fn main() {
         .init();
 
     let args: Vec<String> = std::env::args().collect();
-    let n: u32 = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(10_000);
     let mode = args
         .get(2)
         .map(|s| s.to_lowercase())
         .unwrap_or_else(|| "succinct".to_string());
 
-    // `<prover>+fastdbl` selects the fast-doubling guest algorithm.
-    let algo: u32 = mode.ends_with("+fastdbl") as u32;
-    let prover_mode = mode.trim_end_matches("+fastdbl");
+    // `<prover>+fastdbl` and `<prover>+bounds` select the guest algorithm.
+    let algo: u32 = if mode.ends_with("+bounds") {
+        2
+    } else if mode.ends_with("+fastdbl") {
+        1
+    } else {
+        0
+    };
+    let prover_mode = mode.trim_end_matches("+fastdbl").trim_end_matches("+bounds");
+
+    // The bounds check has no loop count, so it reuses the first argument as x.
+    let n: u32 = args
+        .get(1)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(if algo == 2 { 42 } else { 10_000 });
 
     let opts = match prover_mode {
         "composite" => ProverOpts::composite(),
@@ -59,11 +72,17 @@ fn main() {
     receipt.verify(METHOD_ID).unwrap();
     let verify_ms = t.elapsed().as_secs_f64() * 1000.0;
 
-    // sanity-check outputs (guest commits n, a, b)
-    let (n_out, a, b): (u32, u32, u32) = receipt.journal.decode().unwrap_or((0, 0, 0));
+    // sanity-check outputs: the bounds guest commits just x, the others (n, a, b)
+    let out = if algo == 2 {
+        let x: u32 = receipt.journal.decode().unwrap_or(0);
+        format!("(x={x})")
+    } else {
+        let (n_out, a, b): (u32, u32, u32) = receipt.journal.decode().unwrap_or((0, 0, 0));
+        format!("(n={n_out},a={a},b={b})")
+    };
 
     println!(
-        "BENCH risc0 mode={mode} n={n} prove_s={prove_s:.3} verify_ms={verify_ms:.3} proof_bytes={proof_bytes} out=(n={n_out},a={a},b={b}) stats={:?}",
+        "BENCH risc0 mode={mode} n={n} prove_s={prove_s:.3} verify_ms={verify_ms:.3} proof_bytes={proof_bytes} out={out} stats={:?}",
         prove_info.stats
     );
 }

@@ -4,9 +4,11 @@ use risc0_zkvm::guest::env;
 // Mirrors the SP1 official fibonacci example exactly so the two zkVMs run the
 // identical computation: iterate n times, tracking (a, b) mod 7919.
 //
-// Reads two words: `n`, then `algo` (0 = linear, 1 = fast doubling).  Both
-// algorithms commit the same journal (n, F(n) mod 7919, F(n+1) mod 7919), so
-// they are directly comparable -- only the number of guest cycles differs.
+// Reads two words: `n`, then `algo` (0 = linear, 1 = fast doubling, 2 = bounds
+// check). Algorithms 0 and 1 commit the same journal (n, F(n) mod 7919,
+// F(n+1) mod 7919), so they are directly comparable -- only the number of guest
+// cycles differs. Algorithm 2 is a different claim entirely: it reads `n` as the
+// value x, enforces 10 <= x <= 100, and commits just x.
 
 const M: u64 = 7919;
 
@@ -47,8 +49,16 @@ fn main() {
     let n: u32 = env::read();
     let algo: u32 = env::read();
 
-    // Commit the input n to the journal (public output).
+    // Commit the input n to the journal (public output). For the bounds check
+    // this word IS x, so x is committed by this line.
     env::commit(&n);
+
+    // Bounds check: the smallest real claim, a single range assertion on x.
+    // A violation panics, which makes the guest fail and no receipt is produced.
+    if algo == 2 {
+        assert!((10..=100).contains(&n), "x out of bounds: {}", n);
+        return;
+    }
 
     let (a, b) = if algo == 0 { linear(n) } else { fast_doubling(n) };
 
