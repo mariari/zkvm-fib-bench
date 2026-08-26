@@ -1,11 +1,13 @@
 # Results: zkFOL vs RISC Zero vs SP1
 
-Three claims, each proved on every system, on one machine.
+Three claims, each proved on every system, on one machine. A *claim* is the statement
+the proof establishes; the prover computes it and the verifier checks the proof without
+recomputing.
 
-| claim | why this row exists |
-|---|---|
-| **fib(10,000) mod 7919, fast doubling on every system** | the fair fight: same claim, same algorithm, only the proof system differs |
-| **bounds check 10 ≤ x ≤ 100** | the floor: the smallest claim worth proving, so the fixed cost of a proof |
+| claim                                           | why this row exists                                                                                                            |
+|-------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| **fib(10,000) mod 7919, same algorithm**        | the fair fight: same claim, same algorithm, only the proof system differs                                                      |
+| **bounds check 10 ≤ x ≤ 100**                   | the floor: the smallest claim worth proving, so the fixed cost of a proof                                                      |
 | **fib(10,000) mod 7919, each system's default** | what you get running the published benchmark unchanged, plus zkFOL's exact full-integer rows so the column it loses is visible |
 
 **Machine:** AMD Ryzen 7 5700X (8c/16t), Linux, CPU proving only, one prover at a time.
@@ -14,70 +16,94 @@ Three claims, each proved on every system, on one machine.
 `Examples.EBench` call each (the map it returns is the row).
 
 The one-line version: at the same claim and the same algorithm, zkFOL proves in
-**4.8 ms** where RISC Zero takes **3.7 s** (composite) to **14.7 s** (succinct) and SP1
-**13.3 s** (core) to **49 s** (compressed); the proof is 50 KB against 210 KB to 2.8 MB.
+**4.8 ms** where RISC Zero takes **3.7 s** to **14.7 s** and SP1 **13.3 s** to **49 s**;
+the proof is 50 KB against 210 KB to 2.8 MB.
+
+## The words in the tables
+
+- **fib(n) mod 7919.** The n-th Fibonacci number, reduced modulo 7919 at every step so
+  it stays a 4-digit number. This is the program zkbenchmarks.com runs on every zkVM.
+  "Exact" rows prove the whole integer instead: fib(10,000) has 2,090 digits.
+- **Linear.** Compute fib by walking the recurrence n times: `a, b = b, a + b`. Ten
+  thousand steps for n = 10,000.
+- **Fast doubling.** Jump instead of walk. From the pair (F(k), F(k+1)) two identities
+  give the pair at 2k directly, F(2k) = F(k)(2F(k+1) − F(k)) and F(2k+1) = F(k)² + F(k+1)²,
+  so the index doubles each round and n = 10,000 takes 14 rounds instead of 10,000 steps.
+  Both algorithms prove the same claim; they differ only in how much work the proof has to
+  cover.
+- **Bounds check.** Prove that a number lies in a range and nothing else. No arithmetic,
+  so the cost is the proof system's overhead alone.
+- **RISC Zero composite / succinct.** Composite is the raw proof, one STARK per execution
+  segment; succinct recursively folds those into one constant-size STARK.
+- **SP1 core / compressed.** The same pair for SP1: core is the raw shard proofs,
+  compressed recursively folds them into one.
+- **zkFOL registers / doubled.** Registers is the linear algorithm written as a relation
+  and proved step by step; doubled is the same relation after zkFOL's compiler rewrote it
+  to fast doubling. Nobody writes the doubling by hand on the zkFOL side.
+- **Prove / verify.** Wall time to produce the proof, and to check it.
+- **Peak RSS.** The most memory the whole prover process held at any moment.
 
 ## 1. Same claim, same algorithm
 
-Everyone proves fib(10,000) mod 7919 by fast doubling, ~14 rounds instead of 10,000
-steps. The zkVM guests use a hand-written `fast_doubling` (below). zkFOL is handed the
-naive two-call recurrence and `Zkfol.Doubling` rewrites it to the log-depth kernel.
+Everyone proves fib(10,000) mod 7919 by fast doubling, 14 rounds instead of 10,000 steps.
+The zkVM guests use a hand-written `fast_doubling` (source below). zkFOL is handed the
+naive two-call recurrence and `Zkfol.Doubling` rewrites it to the doubling form.
 
 ![prover time and peak RSS, fib(10,000) mod 7919, fast doubling](prove_fib10000.svg)
 
-| system | prove | verify | proof | peak RSS |
-|---|--:|--:|--:|--:|
-| **zkFOL doubled mod** | **4.82 ms** | **1.4 ms** | **49.8 KB** | 376 MB |
-| RISC Zero composite + fastdbl | 3.69 s | 11.8 ms | 209.6 KB | 312 MB |
-| RISC Zero succinct + fastdbl | 14.73 s | 12.4 ms | 223.3 KB | 1.39 GB |
-| SP1 core + fastdbl | 13.32 s | 74.3 ms | 2.78 MB | 9.39 GB |
-| SP1 compressed + fastdbl | 49.24 s | 32.9 ms | 1.27 MB | 17.00 GB |
+| system                        |       prove |     verify |       proof | peak RSS |
+|-------------------------------|------------:|-----------:|------------:|---------:|
+| **zkFOL doubled mod**         | **4.82 ms** | **1.4 ms** | **49.8 KB** |   376 MB |
+| RISC Zero composite + fastdbl |      3.69 s |    11.8 ms |    209.6 KB |   312 MB |
+| RISC Zero succinct + fastdbl  |     14.73 s |    12.4 ms |    223.3 KB |  1.39 GB |
+| SP1 core + fastdbl            |     13.32 s |    74.3 ms |     2.78 MB |  9.39 GB |
+| SP1 compressed + fastdbl      |     49.24 s |    32.9 ms |     1.27 MB | 17.00 GB |
 
 Prove, zkVM over zkFOL: 766× / 3,060× / 2,760× / 10,200×. Peak RSS: 0.8× / 3.7× / 25× / 45×.
 
 ## 2. The floor: a bounds check
 
 Prove that a committed x lies in [10, 100]. Nothing to compute, so this is the price of
-a proof at all. RISC Zero charges the same 32,768 cycles here as for fastdbl and for
+a proof at all. RISC Zero charges the same 32,768 cycles here as for fast doubling and for
 n = 1; the zkVM columns are unchanged from section 1 because the work never left the floor.
 
 ![prover time and peak RSS, bounds check](prove_bounds.svg)
 
-| system | prove | verify | proof | peak RSS |
-|---|--:|--:|--:|--:|
-| **zkFOL bounds** | **1.53 ms** | **0.54 ms** | **28.0 KB** | 274 MB |
-| RISC Zero composite + bounds | 3.70 s | 11.5 ms | 209.6 KB | 311 MB |
-| RISC Zero succinct + bounds | 14.68 s | 12.3 ms | 223.2 KB | 1.39 GB |
-| SP1 core + bounds | 13.23 s | 78.2 ms | 2.78 MB | 9.36 GB |
-| SP1 compressed + bounds | 49.20 s | 32.6 ms | 1.27 MB | 17.01 GB |
+| system                       |       prove |      verify |       proof | peak RSS |
+|------------------------------|------------:|------------:|------------:|---------:|
+| **zkFOL bounds**             | **1.53 ms** | **0.54 ms** | **28.0 KB** |   274 MB |
+| RISC Zero composite + bounds |      3.70 s |     11.5 ms |    209.6 KB |   311 MB |
+| RISC Zero succinct + bounds  |     14.68 s |     12.3 ms |    223.2 KB |  1.39 GB |
+| SP1 core + bounds            |     13.23 s |     78.2 ms |     2.78 MB |  9.36 GB |
+| SP1 compressed + bounds      |     49.20 s |     32.6 ms |     1.27 MB | 17.01 GB |
 
 Prove, zkVM over zkFOL: 2,420× / 9,600× / 8,650× / 32,200×. Peak RSS: 1.1× / 5.1× / 34× / 62×.
 
 ## 3. Each system's default route
 
-The zkVMs run the zkbenchmarks.com program unchanged: a linear loop, n additions mod
-7919, in their headline STARK mode. zkFOL runs the same linear register recurrence
-(`regsm`, below) and, for scale, the same two routes on the exact 2,090-digit integer.
+The zkVMs run the zkbenchmarks.com program unchanged: the linear loop, in their headline
+proof mode. zkFOL runs the same linear recurrence as a relation (`regsm`, below) and, for
+scale, both algorithms on the exact 2,090-digit integer.
 
-| system | what is proved | prove | verify | proof | peak RSS |
-|---|---|--:|--:|--:|--:|
-| zkFOL registers mod | fib(10,000) mod 7919, linear | 1.06 s | 31.2 ms | 866 KB | 562 MB |
-| zkFOL doubled mod | fib(10,000) mod 7919, doubling | 4.82 ms | 1.4 ms | 49.8 KB | 376 MB |
-| zkFOL registers | exact fib(10,000), linear | 3.65 s | 820.6 ms | 15.5 MB | 1.60 GB |
-| zkFOL doubled | exact fib(10,000), doubling | 8.36 ms | 3.1 ms | 664 KB | 311 MB |
-| RISC Zero succinct | fib(10,000) mod 7919, linear | 40.67 s | 12.5 ms | 223.3 KB | 2.30 GB |
-| SP1 compressed | fib(10,000) mod 7919, linear | 50.39 s | 35.2 ms | 1.27 MB | 17.07 GB |
+| system              | what is proved                 |   prove |   verify |    proof | peak RSS |
+|---------------------|--------------------------------|--------:|---------:|---------:|---------:|
+| zkFOL registers mod | fib(10,000) mod 7919, linear   |  1.06 s |  31.2 ms |   866 KB |   562 MB |
+| zkFOL doubled mod   | fib(10,000) mod 7919, doubling | 4.82 ms |   1.4 ms |  49.8 KB |   376 MB |
+| zkFOL registers     | exact fib(10,000), linear      |  3.65 s | 820.6 ms |  15.5 MB |  1.60 GB |
+| zkFOL doubled       | exact fib(10,000), doubling    | 8.36 ms |   3.1 ms |   664 KB |   311 MB |
+| RISC Zero succinct  | fib(10,000) mod 7919, linear   | 40.67 s |  12.5 ms | 223.3 KB |  2.30 GB |
+| SP1 compressed      | fib(10,000) mod 7919, linear   | 50.39 s |  35.2 ms |  1.27 MB | 17.07 GB |
 
 Read the loss column too: on the linear route zkFOL's verify (31 ms, 820 ms) and proof
-(866 KB, 15.5 MB) grow with the trace, while the zkVM's are constant. The doubling
-rewrite is what removes that; without it the exact-integer linear route is the slowest
-zkFOL row in every column but prove.
+(866 KB, 15.5 MB) grow with the number of steps, while the zkVM's stay constant. The
+doubling rewrite is what removes that; without it the exact-integer linear route is the
+slowest zkFOL row in every column but prove.
 
 ## What each side wrote
 
 The claim in section 1, as the zkVM guest computes it and as zkFOL states it.
 
-<table><tr><th>RISC Zero / SP1 guest (hand-written doubling)</th><th>zkFOL source (the rewrite finds the doubling)</th></tr>
+<table><tr><th>RISC Zero / SP1 guest (hand-written doubling)</th><th>zkFOL source (the compiler finds the doubling)</th></tr>
 <tr><td>
 
 ```rust
@@ -204,16 +230,18 @@ zkVM cells: `./bench_all.sh` runs every (system, mode, n) sequentially and print
 
 zkFOL rows, one call each, in the zkfol repo at 0.4.0:
 
-| row | call |
-|---|---|
-| doubled mod | `Examples.EBench.measured_doubled_fibonacci_mod(10_000)` |
-| bounds | `Examples.EBench.measured_bounds_check()` |
+| row           | call                                                       |
+|---------------|------------------------------------------------------------|
+| doubled mod   | `Examples.EBench.measured_doubled_fibonacci_mod(10_000)`   |
+| bounds        | `Examples.EBench.measured_bounds_check()`                  |
 | registers mod | `Examples.EBench.measured_registers_fibonacci_mod(10_000)` |
-| registers | `Examples.EBench.measured_registers_fibonacci(10_000)` |
-| doubled | `Examples.EBench.measured_doubled_fibonacci(10_000)` |
+| registers     | `Examples.EBench.measured_registers_fibonacci(10_000)`     |
+| doubled       | `Examples.EBench.measured_doubled_fibonacci(10_000)`       |
 
 ```sh
 MIX_ENV=test mix run -e 'Examples.EBench.measured_doubled_fibonacci_mod(10_000) |> IO.inspect()'
 ```
 
 The figures are drawn from the tables by `./chart.py`.
+
+
