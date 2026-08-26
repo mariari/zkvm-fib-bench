@@ -164,6 +164,8 @@ The zkVMs run the zkbenchmarks.com program unchanged: the linear loop, in their 
 proof mode. zkFOL runs `defrel regsm`, the same linear loop as a relation, for a like-for-like
 row, and `defrel fib`, the way a user would write it, on the exact 2,090-digit integer.
 
+![prover time and prover memory, fib(10,000) on each system's default route](prove_default.svg)
+
 <table><tr><th><a href="risc0/methods/guest/src/main.rs#L16-L26">RISC Zero guest</a></th><th><a href="zkfol/definitions.ex">zkFOL</a></th></tr>
 <tr><td>
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Draw the two figures in RESULTS.md from the numbers in its tables.
 
-    ./chart.py            # writes prove_fib10000.svg and prove_bounds.svg
+    ./chart.py            # writes prove_fib10000.svg, prove_bounds.svg, prove_default.svg
 
 Each figure has two panels on log axes, prover wall time and whole-process peak
 RSS, one bar per (system, mode). The numbers are the same-rig medians recorded in
@@ -22,6 +22,12 @@ FIB = [
     ("RISC Zero", "succinct + fastdbl", 14730, 1390),
     ("SP1", "core + fastdbl", 13320, 9390),
     ("SP1", "compressed + fastdbl", 49240, 17000),
+]
+DEFAULT = [
+    ("zkFOL", "regsm", 1060, 10, "&lt; 10 MB"),
+    ("zkFOL", "fib, doubled", 8.36, 10, "&lt; 10 MB"),
+    ("RISC Zero", "succinct", 40670, 2300),
+    ("SP1", "compressed", 50390, 17070),
 ]
 BOUNDS = [
     ("zkFOL", "bounded", 1.53, 3, "~3 MB"),
@@ -91,3 +97,6 @@ figure(FIB, "fib(10,000) mod 7919, the same algorithm on every system",
 figure(BOUNDS, "bounds check 10 ≤ x ≤ 100",
        "nothing to compute, so this is the fixed cost of a proof; CPU only, AMD Ryzen 7 5700X; medians of 3",
        "prove_bounds.svg")
+figure(DEFAULT, "fib(10,000), each system's default route",
+       "the published linear loop on the zkVMs; regsm like for like and plain fib on zkFOL; CPU only, AMD Ryzen 7 5700X; medians of 3",
+       "prove_default.svg")
