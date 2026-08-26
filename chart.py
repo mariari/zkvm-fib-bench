@@ -88,6 +88,6 @@ def figure(rows, title, subtitle, path):
 figure(FIB, "fib(10,000) mod 7919, the same algorithm on every system",
        "fast doubling, 14 rounds instead of 10,000 steps; CPU only, AMD Ryzen 7 5700X; medians of 3",
        "prove_fib10000.svg")
-figure(BOUNDS, "bounds check 10 ≤ x ≤ 100, the smallest claim worth proving",
+figure(BOUNDS, "bounds check 10 ≤ x ≤ 100",
        "nothing to compute, so this is the fixed cost of a proof; CPU only, AMD Ryzen 7 5700X; medians of 3",
        "prove_bounds.svg")
