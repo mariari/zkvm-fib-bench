@@ -33,9 +33,9 @@ the proof is 50 KB against 210 KB to 2.8 MB.
   segment; succinct recursively folds those into one constant-size STARK.
 - **SP1 core / compressed.** The same pair for SP1: core is the raw shard proofs,
   compressed recursively folds them into one.
-- **zkFOL registers / doubled.** Registers is the linear algorithm written as a relation
-  and proved step by step; doubled is the same relation after zkFOL's compiler rewrote it
-  to fast doubling. Nobody writes the doubling by hand on the zkFOL side.
+- **zkFOL `regsm` / `fib`.** `regsm` is the linear loop written as a relation and proved
+  step by step; `fib` is the naive recurrence, which zkFOL's compiler rewrites to fast
+  doubling before proving. Nobody writes the doubling by hand on the zkFOL side.
 - **Prove / verify.** Wall time to produce the proof, and to check it.
 - **Prover memory.** The most memory the prover held at any moment, over what the process
   used before it started proving.
@@ -43,8 +43,9 @@ the proof is 50 KB against 210 KB to 2.8 MB.
 ## 1. fib(10,000) mod 7919
 
 Everyone proves fib(10,000) mod 7919 by fast doubling, 14 rounds instead of 10,000 steps.
-The zkVM guests use a hand-written `fast_doubling` (source below). zkFOL is handed the
-naive two-call recurrence and `Zkfol.Doubling` rewrites it to the doubling form.
+The zkVM guests use a hand-written `fast_doubling` (source below). zkFOL is handed
+`defrel fibm`, the naive two-call recurrence, and `Zkfol.Doubling` rewrites it to the
+doubling form.
 
 ![prover time and prover memory, fib(10,000) mod 7919, fast doubling](prove_fib10000.svg)
 
@@ -103,7 +104,7 @@ end
 
 | system                                                                   |       prove |     verify |       proof | prover memory |
 |--------------------------------------------------------------------------|------------:|-----------:|------------:|--------------:|
-| **[zkFOL doubled mod](zkfol/definitions.ex#L17-L25)**                    | **4.82 ms** | **1.4 ms** | **49.8 KB** |   **< 10 MB** |
+| **[zkFOL `fibm`, doubled](zkfol/definitions.ex#L17-L25)**                | **4.82 ms** | **1.4 ms** | **49.8 KB** |   **< 10 MB** |
 | [RISC Zero composite + fastdbl](risc0/methods/guest/src/main.rs#L32-L46) |      3.69 s |    11.8 ms |    209.6 KB |        312 MB |
 | [RISC Zero succinct + fastdbl](risc0/methods/guest/src/main.rs#L32-L46)  |     14.73 s |    12.4 ms |    223.3 KB |       1.39 GB |
 | [SP1 core + fastdbl](sp1/program/src/main.rs#L30-L44)                    |     13.32 s |    74.3 ms |     2.78 MB |       9.39 GB |
@@ -149,7 +150,7 @@ end
 
 | system                                                              |       prove |      verify |       proof | prover memory |
 |---------------------------------------------------------------------|------------:|------------:|------------:|--------------:|
-| **[zkFOL bounds](zkfol/definitions.ex#L48-L51)**                    | **1.53 ms** | **0.54 ms** | **28.0 KB** |     **~3 MB** |
+| **[zkFOL `bounded`](zkfol/definitions.ex#L48-L51)**                 | **1.53 ms** | **0.54 ms** | **28.0 KB** |     **~3 MB** |
 | [RISC Zero composite + bounds](risc0/methods/guest/src/main.rs#L59) |      3.70 s |     11.5 ms |    209.6 KB |        311 MB |
 | [RISC Zero succinct + bounds](risc0/methods/guest/src/main.rs#L59)  |     14.68 s |     12.3 ms |    223.2 KB |       1.39 GB |
 | [SP1 core + bounds](sp1/program/src/main.rs#L56)                    |     13.23 s |     78.2 ms |     2.78 MB |       9.36 GB |
@@ -160,8 +161,8 @@ Prove, zkVM over zkFOL: 2,420× / 9,600× / 8,650× / 32,200×. Memory: 100× / 
 ## 3. Each system's default route
 
 The zkVMs run the zkbenchmarks.com program unchanged: the linear loop, in their headline
-proof mode. zkFOL runs the same linear loop as a relation (`regsm`) for a like-for-like
-row, and plain `fib`, the way a user would write it, on the exact 2,090-digit integer.
+proof mode. zkFOL runs `defrel regsm`, the same linear loop as a relation, for a like-for-like
+row, and `defrel fib`, the way a user would write it, on the exact 2,090-digit integer.
 
 <table><tr><th><a href="risc0/methods/guest/src/main.rs#L16-L26">RISC Zero guest</a></th><th><a href="zkfol/definitions.ex">zkFOL</a></th></tr>
 <tr><td>
@@ -214,15 +215,15 @@ end
 
 | system                                                        | what is proved               |   prove |  verify |    proof | prover memory |
 |---------------------------------------------------------------|------------------------------|--------:|--------:|---------:|--------------:|
-| [zkFOL registers mod](zkfol/definitions.ex#L39-L45)           | fib(10,000) mod 7919, linear |  1.06 s | 31.2 ms |   866 KB |       < 10 MB |
-| [zkFOL doubled](zkfol/definitions.ex#L6-L14)                  | exact fib(10,000), doubling  | 8.36 ms |  3.1 ms |   664 KB |       < 10 MB |
+| [zkFOL `regsm`](zkfol/definitions.ex#L39-L45)                 | fib(10,000) mod 7919, linear |  1.06 s | 31.2 ms |   866 KB |       < 10 MB |
+| [zkFOL `fib`, doubled](zkfol/definitions.ex#L6-L14)           | exact fib(10,000), doubling  | 8.36 ms |  3.1 ms |   664 KB |       < 10 MB |
 | [RISC Zero succinct](risc0/methods/guest/src/main.rs#L16-L26) | fib(10,000) mod 7919, linear | 40.67 s | 12.5 ms | 223.3 KB |       2.30 GB |
 | [SP1 compressed](sp1/program/src/main.rs#L14-L24)             | fib(10,000) mod 7919, linear | 50.39 s | 35.2 ms |  1.27 MB |      17.07 GB |
 
-Read the loss column too: on the linear route zkFOL's verify (31 ms) and proof (866 KB)
-grow with the number of steps, while the zkVM's stay constant. Plain `fib` has neither
-problem because the compiler rewrites it to doubling, which is why that is the route a
-user gets by default.
+Read the loss column too: on `regsm` zkFOL's verify (31 ms) and proof (866 KB) grow with
+the number of steps, while the zkVM's stay constant. `fib` has neither problem because
+the compiler rewrites it to doubling, which is why that is the route a user gets by
+default.
 
 ## How memory is measured
 
@@ -258,23 +259,24 @@ zkVM cells: `./bench_all.sh` runs every (system, mode, n) sequentially and print
 `CELL` line each, median of 3, with peak RSS. Rows above are the cells
 `<system> <mode>+fastdbl 10000`, `<system> <mode>+bounds 42`, and `<system> <mode> 10000`.
 
-zkFOL rows, one call each, in the zkfol repo at 0.4.0. The definition column is the FOL
-relation the row proved, as collected in [`zkfol/definitions.ex`](zkfol/definitions.ex); the call column is the measuring
+zkFOL rows, one call each, in the zkfol repo at 0.4.0. The definition column links the
+relation in [`zkfol/definitions.ex`](zkfol/definitions.ex); the call column is the measuring
 example in `Examples.EBench`.
 
-| row           | definition                                                                             | call                                       |
-|---------------|----------------------------------------------------------------------------------------|--------------------------------------------|
-| doubled mod   | [`fibm`](zkfol/definitions.ex#L17-L25), rewritten by `Zkfol.Doubling`                  | `measured_doubled_fibonacci_mod(10_000)`   |
-| bounds        | [`bounded`](zkfol/definitions.ex#L48-L51)                                              | `measured_bounds_check()`                  |
-| registers mod | [`regsm`](zkfol/definitions.ex#L39-L45)                                                | `measured_registers_fibonacci_mod(10_000)` |
-| registers     | [`regs`](zkfol/definitions.ex#L29-L35), the exact integer                              | `measured_registers_fibonacci(10_000)`     |
-| doubled       | [`fib`](zkfol/definitions.ex#L6-L14), the exact integer, rewritten by `Zkfol.Doubling` | `measured_doubled_fibonacci(10_000)`       |
+| row             | definition                                                                             | call                                       |
+|-----------------|----------------------------------------------------------------------------------------|--------------------------------------------|
+| `fibm`, doubled | [`fibm`](zkfol/definitions.ex#L17-L25), rewritten by `Zkfol.Doubling`                  | `measured_doubled_fibonacci_mod(10_000)`   |
+| `bounded`       | [`bounded`](zkfol/definitions.ex#L48-L51)                                              | `measured_bounds_check()`                  |
+| `regsm`         | [`regsm`](zkfol/definitions.ex#L39-L45)                                                | `measured_registers_fibonacci_mod(10_000)` |
+| `regs`          | [`regs`](zkfol/definitions.ex#L29-L35), the exact integer                              | `measured_registers_fibonacci(10_000)`     |
+| `fib`, doubled  | [`fib`](zkfol/definitions.ex#L6-L14), the exact integer, rewritten by `Zkfol.Doubling` | `measured_doubled_fibonacci(10_000)`       |
 
 ```sh
 MIX_ENV=test mix run -e 'Examples.EBench.measured_doubled_fibonacci_mod(10_000) |> IO.inspect()'
 ```
 
 The figures are drawn from the tables by `./chart.py`.
+
 
 
 

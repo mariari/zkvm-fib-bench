@@ -17,14 +17,14 @@ INK, INK2, MUTED, GRID, AXIS, SURFACE = (
 # is its increment over the idle Erlang VM, under the ~10 MB noise floor on both rows;
 # it is plotted at the floor and labelled as a bound.
 FIB = [
-    ("zkFOL", "doubled mod", 4.82, 10, "&lt; 10 MB"),
+    ("zkFOL", "fibm, doubled", 4.82, 10, "&lt; 10 MB"),
     ("RISC Zero", "composite + fastdbl", 3690, 312),
     ("RISC Zero", "succinct + fastdbl", 14730, 1390),
     ("SP1", "core + fastdbl", 13320, 9390),
     ("SP1", "compressed + fastdbl", 49240, 17000),
 ]
 BOUNDS = [
-    ("zkFOL", "bounds", 1.53, 3, "~3 MB"),
+    ("zkFOL", "bounded", 1.53, 3, "~3 MB"),
     ("RISC Zero", "composite + bounds", 3700, 311),
     ("RISC Zero", "succinct + bounds", 14680, 1390),
     ("SP1", "core + bounds", 13230, 9360),

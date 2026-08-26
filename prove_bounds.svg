@@ -8,7 +8,7 @@
 <rect x="820" y="14" width="10" height="10" rx="2" fill="#eb6834"/>
 <text x="769" y="24" font-size="12" fill="#52514e">zkFOL</text>
 <rect x="753" y="14" width="10" height="10" rx="2" fill="#2a78d6"/>
-<text x="178" y="113.0" font-size="12" text-anchor="end" fill="#0b0b0b">zkFOL bounds</text>
+<text x="178" y="113.0" font-size="12" text-anchor="end" fill="#0b0b0b">zkFOL bounded</text>
 <text x="178" y="147.0" font-size="12" text-anchor="end" fill="#0b0b0b">RISC Zero composite + bounds</text>
 <text x="178" y="181.0" font-size="12" text-anchor="end" fill="#0b0b0b">RISC Zero succinct + bounds</text>
 <text x="178" y="215.0" font-size="12" text-anchor="end" fill="#0b0b0b">SP1 core + bounds</text>
