@@ -1,48 +1,54 @@
-defrel fib(1, 1)
-defrel fib(2, 1)
+defmodule Benchmarks do
+  use Zkfol.Lang
 
-defrel fib(x, v) do
-  x > 2
-  fib(x - 1, v1)
-  fib(x - 2, v2)
-  v = v1 + v2
-end
+  # fib(x, v): v is the x-th Fibonacci number, exact. The "doubled" row is this
+  # relation after Zkfol.Doubling rewrote it to fast doubling.
+  defrel fib(1, 1)
+  defrel fib(2, 1)
 
-# fibm(x, v): the same recurrence reduced mod 7919 at every step.
-defrel fibm(1, 1)
-defrel fibm(2, 1)
+  defrel fib(x, v) do
+    x > 2
+    fib(x - 1, v1)
+    fib(x - 2, v2)
+    v = v1 + v2
+  end
 
-defrel fibm(x, v) do
-  x > 2
-  fibm(x - 1, v1)
-  fibm(x - 2, v2)
-  v = mod(v1 + v2, 7919)
-end
+  # fibm(x, v): the same recurrence reduced mod 7919 at every step.
+  defrel fibm(1, 1)
+  defrel fibm(2, 1)
 
-# regs(x, a, b): the linear loop, exact. (a, b) are the two registers after
-# x steps. The "registers" row.
-defrel regs(1, 1, 1)
+  defrel fibm(x, v) do
+    x > 2
+    fibm(x - 1, v1)
+    fibm(x - 2, v2)
+    v = mod(v1 + v2, 7919)
+  end
 
-defrel regs(x, a, b) do
-  x > 1
-  regs(x - 1, b, b1)
-  a = b + b1
-end
+  # regs(x, a, b): the linear loop, exact. (a, b) are the two registers after
+  # x steps. The "registers" row.
+  defrel regs(1, 1, 1)
 
-# regsm(x, a, b): the linear loop mod 7919, the zkbenchmarks.com program as a
-# relation. The "registers mod" row.
-defrel regsm(1, 1, 1)
+  defrel regs(x, a, b) do
+    x > 1
+    regs(x - 1, b, b1)
+    a = b + b1
+  end
 
-defrel regsm(x, a, b) do
-  x > 1
-  regsm(x - 1, b, b1)
-  a = mod(b + b1, 7919)
-end
+  # regsm(x, a, b): the linear loop mod 7919, the zkbenchmarks.com program as a
+  # relation. The "registers mod" row.
+  defrel regsm(1, 1, 1)
 
-# bounded(x): 10 <= x <= 100 and nothing else. The "bounds" row.
-defrel bounded(x) do
-  x > 9
-  x < 101
+  defrel regsm(x, a, b) do
+    x > 1
+    regsm(x - 1, b, b1)
+    a = mod(b + b1, 7919)
+  end
+
+  # bounded(x): 10 <= x <= 100 and nothing else. The "bounds" row.
+  defrel bounded(x) do
+    x > 9
+    x < 101
+  end
 end
 
 # The measuring calls, one per row (Examples.EBench):

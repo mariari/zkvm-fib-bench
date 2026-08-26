@@ -1,0 +1,39 @@
+(undo-tree-save-format-version . 1)
+"7c0d741b08ad5c2748b76990a664745978d7e7cf"
+[nil nil nil nil (27278 59741 215024 420000) 0 nil]
+([nil nil ((#("# The zkFOL definitions the benchmark ran, copied verbatim from zkfol 0.4.0
+# (lib/examples/e_user.ex and e_doubling.ex). Each is a relation written with
+# Zkfol.Lang; the pipeline turns it into a predicate, a witness, and a proof.
+" 0 2 (face font-lock-comment-delimiter-face fontified t) 2 76 (face font-lock-comment-face fontified t) 76 78 (face font-lock-comment-delimiter-face fontified t) 78 154 (face font-lock-comment-face fontified t) 154 156 (face font-lock-comment-delimiter-face fontified t) 156 232 (face font-lock-comment-face fontified t)) . -1) (undo-tree-id0 . -232) 233 (t 27278 59602 568770 542000)) nil (27278 59741 215023 147000) 0 nil])
+([nil nil ((#("
+" 0 1 (fontified t)) . 1)) nil (27278 59741 214971 459000) 0 nil])
+([nil nil ((#("# fib(x, v): v is the x-th Fibonacci number, exact. The \"doubled\" row is this
+# relation after Zkfol.Doubling rewrote it to fast doubling." 0 2 (face font-lock-comment-delimiter-face fontified t) 2 56 (face font-lock-comment-face fontified t) 56 57 (face font-lock-comment-face syntax-table (15) fontified t) 57 64 (face font-lock-comment-face fontified t) 64 65 (face font-lock-comment-face syntax-table (15) fontified t) 65 78 (face font-lock-comment-face fontified t) 78 80 (face font-lock-comment-delimiter-face fontified t) 80 138 (face font-lock-comment-face fontified t)) . -1) (undo-tree-id3 . -138) 139 (t 27278 59741 212327 383000)) nil (27278 59767 261225 795000) 0 nil])
+([nil nil ((#("
+" 0 1 (fontified t)) . 1)) nil (27278 59767 261224 652000) 0 nil])
+([nil nil ((#(" The
+# \"doubled mod\" row is Doubling.rewrite(fibm, 10_000)." 0 5 (face font-lock-comment-face fontified t) 5 7 (face font-lock-comment-delimiter-face fontified t) 7 8 (face font-lock-comment-face fontified t syntax-table (15)) 8 19 (face font-lock-comment-face fontified t) 19 20 (face font-lock-comment-face fontified t syntax-table (15)) 20 59 (face font-lock-comment-face fontified t)) . 182) (undo-tree-id1 . -59) (undo-tree-id2 . -59)) nil (27278 59838 144301 689000) 0 nil])
+([nil nil ((#("a" 0 1 (fontified t)) . -505) (undo-tree-id20 . -1) (#("1" 0 1 (fontified t)) . -506) (undo-tree-id21 . -1) 507 (t 27278 59767 259662 400000)) nil (27278 59875 651653 248000) 0 nil] [nil nil ((#("a" 0 1 (fontified t)) . -491) (undo-tree-id4 . -1) (#("1" 0 1 (fontified t)) . -492) (undo-tree-id5 . -1) 493 (t 27278 59767 259662 400000)) ((491 . 493)) (27278 59837 984267 615000) 0 nil])
+([nil nil ((505 . 506)) nil (27278 59875 651651 415000) 0 nil])
+([nil nil ((491 . 492)) ((#("b" 0 1 (fontified t)) . 491)) (27278 59837 983962 144000) 0 nil])
+([nil nil ((#("a" 0 1 (fontified t)) . -491) (undo-tree-id18 . -1) (#("1" 0 1 (fontified t)) . -492) (undo-tree-id19 . -1) 493) nil (27278 59875 651650 754000) 0 nil])
+nil
+([nil nil ((491 . 492)) nil (27278 59875 651649 662000) 0 nil])
+([nil nil ((#("  b = a1" 0 2 (fontified t) 2 3 (face font-lock-variable-name-face fontified t) 3 8 (fontified t)) . 511) (undo-tree-id17 . -8)) nil (27278 59875 651649 311000) 0 nil])
+([nil nil ((#("
+" 0 1 (fontified t)) . -510) (undo-tree-id15 . -1) (undo-tree-id16 . -1) 511) nil (27278 59875 651648 249000) 0 nil])
+([nil nil ((#("a1" 0 2 (fontified t)) . -828) (undo-tree-id14 . -2) 830) nil (27278 59875 651647 397000) 0 nil])
+([nil nil ((828 . 829)) nil (27278 59875 651646 656000) 0 nil])
+([nil nil ((#("a1" 0 2 (fontified t)) . -841) (undo-tree-id10 . -2) (undo-tree-id11 . -2) (undo-tree-id12 . -2) (undo-tree-id13 . -2) 843) nil (27278 59875 651646 5000) 0 nil])
+([nil nil ((841 . 842)) nil (27278 59875 651644 141000) 0 nil])
+([nil nil ((#("a1" 0 2 (fontified t)) . -904) (undo-tree-id6 . -2) (undo-tree-id7 . -2) (undo-tree-id8 . -2) (undo-tree-id9 . -2) 906) nil (27278 59875 651642 919000) 0 nil])
+([nil nil ((904 . 905)) nil (27278 59875 651624 383000) 0 nil])
+([nil nil ((805 . 806) (805 . 806) (t 27278 59875 649110 588000)) nil (27278 59923 591313 280000) 0 nil])
+([nil nil ((805 . 846)) nil (27278 59923 591312 379000) 0 nil])
+([nil nil ((#("  x > 1
+  regs(x - 1, b, b1)
+  a = b + b1
+" 0 6 (fontified t) 6 7 (face elixir-number-face fontified t) 7 8 (fontified t) 8 19 (fontified t) 19 20 (face elixir-number-face fontified t) 20 23 (fontified t) 23 29 (fontified t) 29 31 (fontified t) 31 32 (face font-lock-variable-name-face fontified t) 32 41 (fontified t) 41 42 (fontified t)) . 805) (undo-tree-id22 . -42) (undo-tree-id23 . -42)) nil (27278 59923 591311 186000) 0 nil])
+([nil current ((#("
+" 0 1 (fontified t)) . 805)) nil (27278 59923 591294 685000) 0 nil])
+nil
