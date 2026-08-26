@@ -102,9 +102,9 @@ slowest zkFOL row in every column but prove.
 ## What each side wrote
 
 The claim in section 1, as the zkVM guest computes it and as zkFOL states it. Every zkFOL
-snippet is the definition the benchmark ran, linked to its line in the zkfol repo at 0.4.0.
+snippet is the definition the benchmark ran, copied verbatim into [`zkfol/definitions.ex`](zkfol/definitions.ex).
 
-<table><tr><th><a href="risc0/methods/guest/src/main.rs">RISC Zero</a> / <a href="sp1/program/src/main.rs">SP1</a> guest (hand-written doubling)</th><th><a href="https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_doubling.ex#L47-L59">zkFOL source</a> (the compiler finds the doubling)</th></tr>
+<table><tr><th><a href="risc0/methods/guest/src/main.rs">RISC Zero</a> / <a href="sp1/program/src/main.rs">SP1</a> guest (hand-written doubling)</th><th><a href="zkfol/definitions.ex#L19-L27">zkFOL source</a> (the compiler finds the doubling)</th></tr>
 <tr><td>
 
 ```rust
@@ -139,13 +139,13 @@ fibm(x, v) do
 end
 ```
 
-[`Doubling.rewrite(fibm, 10_000)`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_doubling.ex#L62-L64)
+`Doubling.rewrite(fibm, 10_000)`
 
 </td></tr></table>
 
 The floor claim (section 2):
 
-<table><tr><th>guest</th><th><a href="https://github.com/Axion-Industrial/zkfol/blob/claude/bench-digest/lib/examples/e_user.ex">zkFOL</a> (on the bench-digest topic until it merges)</th></tr>
+<table><tr><th>guest</th><th><a href="zkfol/definitions.ex#L56-L59">zkFOL</a></th></tr>
 <tr><td>
 
 ```rust
@@ -165,7 +165,7 @@ end
 
 The default route (section 3), the linear loop both sides run:
 
-<table><tr><th>guest</th><th><a href="https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_user.ex#L46-L55">zkFOL</a></th></tr>
+<table><tr><th>guest</th><th><a href="zkfol/definitions.ex#L43-L53">zkFOL</a></th></tr>
 <tr><td>
 
 ```rust
@@ -230,21 +230,23 @@ zkVM cells: `./bench_all.sh` runs every (system, mode, n) sequentially and print
 `<system> <mode>+fastdbl 10000`, `<system> <mode>+bounds 42`, and `<system> <mode> 10000`.
 
 zkFOL rows, one call each, in the zkfol repo at 0.4.0. The definition column is the FOL
-relation the row proved; the call column is the measuring example.
+relation the row proved, as copied into [`zkfol/definitions.ex`](zkfol/definitions.ex); the call column is the measuring
+example in `Examples.EBench`.
 
-| row           | definition                                                                                                                                      | call                                                                                                                                |
-|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| doubled mod   | [`fibm`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_doubling.ex#L47-L59), rewritten by `Zkfol.Doubling`               | [`measured_doubled_fibonacci_mod(10_000)`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_bench.ex#L59-L70)   |
-| bounds        | [`bounded`](https://github.com/Axion-Industrial/zkfol/blob/claude/bench-digest/lib/examples/e_user.ex)                                          | [`measured_bounds_check()`](https://github.com/Axion-Industrial/zkfol/blob/claude/bench-digest/lib/examples/e_bench.ex)             |
-| registers mod | [`regsm`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_user.ex#L46-L55)                                                 | [`measured_registers_fibonacci_mod(10_000)`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_bench.ex#L36-L45) |
-| registers     | [`regs`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_user.ex#L35-L42), the exact integer                               | [`measured_registers_fibonacci(10_000)`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_bench.ex#L30-L34)     |
-| doubled       | [`fib`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_user.ex#L25-L33), the exact integer, rewritten by `Zkfol.Doubling` | [`measured_doubled_fibonacci(10_000)`](https://github.com/Axion-Industrial/zkfol/blob/v0.4.0/lib/examples/e_bench.ex#L47-L57)       |
+| row           | definition                                                                             | call                                       |
+|---------------|----------------------------------------------------------------------------------------|--------------------------------------------|
+| doubled mod   | [`fibm`](zkfol/definitions.ex#L19-L27), rewritten by `Zkfol.Doubling`                  | `measured_doubled_fibonacci_mod(10_000)`   |
+| bounds        | [`bounded`](zkfol/definitions.ex#L56-L59)                                              | `measured_bounds_check()`                  |
+| registers mod | [`regsm`](zkfol/definitions.ex#L43-L53)                                                | `measured_registers_fibonacci_mod(10_000)` |
+| registers     | [`regs`](zkfol/definitions.ex#L31-L38), the exact integer                              | `measured_registers_fibonacci(10_000)`     |
+| doubled       | [`fib`](zkfol/definitions.ex#L7-L15), the exact integer, rewritten by `Zkfol.Doubling` | `measured_doubled_fibonacci(10_000)`       |
 
 ```sh
 MIX_ENV=test mix run -e 'Examples.EBench.measured_doubled_fibonacci_mod(10_000) |> IO.inspect()'
 ```
 
 The figures are drawn from the tables by `./chart.py`.
+
 
 
 
