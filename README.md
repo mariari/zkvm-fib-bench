@@ -51,12 +51,12 @@ Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 
 
 ## Layout
 
-| Path | What |
-|---|---|
-| `risc0/` | RISC Zero project (guest `methods/guest`, timing host `host/src/main.rs`) — pinned to `risc0-zkvm = 3.0.5` |
-| `sp1/`   | SP1 project (`program/` guest, `script/` timing host) — pinned to `sp1 = 6.3.1` (standalone; no monorepo needed) |
-| `run_fib.sh` | one-shot builder/runner |
-| `RESULTS.md` | measured numbers + analysis (incl. why this is/isn't a fair comparison vs a specialized prover) |
+| Path         | What                                                                                                             |
+|--------------|------------------------------------------------------------------------------------------------------------------|
+| `risc0/`     | RISC Zero project (guest `methods/guest`, timing host `host/src/main.rs`) — pinned to `risc0-zkvm = 3.0.5`       |
+| `sp1/`       | SP1 project (`program/` guest, `script/` timing host) — pinned to `sp1 = 6.3.1` (standalone; no monorepo needed) |
+| `run_fib.sh` | one-shot builder/runner                                                                                          |
+| `RESULTS.md` | measured numbers + analysis (incl. why this is/isn't a fair comparison vs a specialized prover)                  |
 
 ## Note: RISC Zero guest builds in Docker
 
@@ -66,15 +66,16 @@ reproducible ELF). If your host toolchain is older you can drop that and build n
 
 ## Results
 
-See [`RESULTS.md`](RESULTS.md). Headline (fib 10,000, CPU, AMD Ryzen 7 5700X):
+See [`RESULTS.md`](RESULTS.md): three claims, each proved on zkFOL, RISC Zero and SP1 on
+one CPU, with the source each side wrote and the two figures. Headline, fib(10,000) mod
+7919 by fast doubling on every system (AMD Ryzen 7 5700X):
 
-| | RISC Zero (succinct STARK) | SP1 (compressed STARK) |
-|---|---|---|
-| prove | 42.6 s | 53.3 s |
-| verify | 12.3 ms | 35.0 ms |
-| proof size | ~218 KB | ~1.24 MB |
-
-Groth16 wrap (risc0): 196.5 s prove, 3.2 ms verify, **521-byte** proof.
+|          |   zkFOL | RISC Zero composite | RISC Zero succinct | SP1 core | SP1 compressed |
+|----------|--------:|--------------------:|-------------------:|---------:|---------------:|
+| prove    | 4.82 ms |              3.69 s |            14.73 s |  13.32 s |        49.24 s |
+| verify   |  1.4 ms |             11.8 ms |            12.4 ms |  74.3 ms |        32.9 ms |
+| proof    | 49.8 KB |            209.6 KB |           223.3 KB |  2.78 MB |        1.27 MB |
+| peak RSS |  376 MB |              312 MB |            1.39 GB |  9.39 GB |       17.00 GB |
 
 > zkVM prove times are hardware- and contention-sensitive (risc0 scales with cores;
 > risc0 fib(1000) measured 33 s contended vs 18 s uncontended on the same box). Quote the
@@ -94,3 +95,5 @@ permissively licensed:
 
 This repo's own contribution is the instrumented prove/verify timing hosts, the runner,
 and the analysis in `RESULTS.md`. Licensed MIT (see `LICENSE`).
+
+
