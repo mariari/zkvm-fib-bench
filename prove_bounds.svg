@@ -38,25 +38,29 @@
 <path d="M190,235.0 h305.7 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-305.7 z" fill="#1baf7a"/>
 <text x="505.7" y="249.0" font-size="12" fill="#0b0b0b">49.2 s</text>
 <text x="520" y="294" font-size="11" text-anchor="end" fill="#898781">log scale</text>
-<text x="610" y="62" font-size="13" font-weight="600" fill="#0b0b0b">peak RSS, whole process</text>
+<text x="610" y="62" font-size="13" font-weight="600" fill="#0b0b0b">prover memory</text>
 <line x1="610.0" y1="86" x2="610.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="610.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 MB</text>
-<line x1="720.0" y1="86" x2="720.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="720.0" y="278" font-size="11" text-anchor="middle" fill="#898781">1 GB</text>
-<line x1="830.0" y1="86" x2="830.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="830.0" y="278" font-size="11" text-anchor="middle" fill="#898781">10 GB</text>
+<text x="610.0" y="278" font-size="11" text-anchor="middle" fill="#898781">1 MB</text>
+<line x1="676.0" y1="86" x2="676.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
+<text x="676.0" y="278" font-size="11" text-anchor="middle" fill="#898781">10 MB</text>
+<line x1="742.0" y1="86" x2="742.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
+<text x="742.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 MB</text>
+<line x1="808.0" y1="86" x2="808.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
+<text x="808.0" y="278" font-size="11" text-anchor="middle" fill="#898781">1 GB</text>
+<line x1="874.0" y1="86" x2="874.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
+<text x="874.0" y="278" font-size="11" text-anchor="middle" fill="#898781">10 GB</text>
 <line x1="940.0" y1="86" x2="940.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
 <text x="940.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 GB</text>
 <line x1="610" y1="86" x2="610" y2="262" stroke="#c3c2b7" stroke-width="1"/>
-<path d="M610,99.0 h44.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-44.2 z" fill="#2a78d6"/>
-<text x="664.2" y="113.0" font-size="12" fill="#0b0b0b">274 MB</text>
-<path d="M610,133.0 h50.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-50.2 z" fill="#eb6834"/>
-<text x="670.2" y="147.0" font-size="12" fill="#0b0b0b">311 MB</text>
-<path d="M610,167.0 h121.7 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-121.7 z" fill="#eb6834"/>
-<text x="741.7" y="181.0" font-size="12" fill="#0b0b0b">1.39 GB</text>
-<path d="M610,201.0 h212.8 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-212.8 z" fill="#1baf7a"/>
-<text x="832.8" y="215.0" font-size="12" fill="#0b0b0b">9.36 GB</text>
-<path d="M610,235.0 h241.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-241.4 z" fill="#1baf7a"/>
-<text x="861.4" y="249.0" font-size="12" fill="#0b0b0b">17 GB</text>
+<path d="M610,99.0 h27.5 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-27.5 z" fill="#2a78d6"/>
+<text x="647.5" y="113.0" font-size="12" fill="#0b0b0b">~3 MB</text>
+<path d="M610,133.0 h160.5 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-160.5 z" fill="#eb6834"/>
+<text x="780.5" y="147.0" font-size="12" fill="#0b0b0b">311 MB</text>
+<path d="M610,167.0 h203.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-203.4 z" fill="#eb6834"/>
+<text x="823.4" y="181.0" font-size="12" fill="#0b0b0b">1.39 GB</text>
+<path d="M610,201.0 h258.1 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-258.1 z" fill="#1baf7a"/>
+<text x="878.1" y="215.0" font-size="12" fill="#0b0b0b">9.36 GB</text>
+<path d="M610,235.0 h275.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-275.2 z" fill="#1baf7a"/>
+<text x="895.2" y="249.0" font-size="12" fill="#0b0b0b">17 GB</text>
 <text x="940" y="294" font-size="11" text-anchor="end" fill="#898781">log scale</text>
 </svg>

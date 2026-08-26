@@ -13,16 +13,18 @@ SYSTEM = {"zkFOL": "#2a78d6", "RISC Zero": "#eb6834", "SP1": "#1baf7a"}
 INK, INK2, MUTED, GRID, AXIS, SURFACE = (
     "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3c2b7", "#fcfcfb")
 
-# (system, mode label, prove ms, peak RSS MB)
+# (system, mode label, prove ms, prover memory MB, memory label). zkFOL's prover memory
+# is its increment over the idle Erlang VM, under the ~10 MB noise floor on both rows;
+# it is plotted at the floor and labelled as a bound.
 FIB = [
-    ("zkFOL", "doubled mod", 4.82, 376),
+    ("zkFOL", "doubled mod", 4.82, 10, "&lt; 10 MB"),
     ("RISC Zero", "composite + fastdbl", 3690, 312),
     ("RISC Zero", "succinct + fastdbl", 14730, 1390),
     ("SP1", "core + fastdbl", 13320, 9390),
     ("SP1", "compressed + fastdbl", 49240, 17000),
 ]
 BOUNDS = [
-    ("zkFOL", "bounds", 1.53, 274),
+    ("zkFOL", "bounds", 1.53, 3, "~3 MB"),
     ("RISC Zero", "composite + bounds", 3700, 311),
     ("RISC Zero", "succinct + bounds", 14680, 1390),
     ("SP1", "core + bounds", 13230, 9360),
@@ -55,7 +57,8 @@ def panel(x0, rows, col, lo, hi, ticks, fmt, title):
         y, x1 = TOP + ROW * i + (ROW - BAR) / 2, xs(v)
         w = x1 - x0
         out.append(f'<path d="M{x0},{y} h{w - 4:.1f} a4,4 0 0 1 4,4 v{BAR - 8} a4,4 0 0 1 -4,4 h{-(w - 4):.1f} z" fill="{color}"/>')
-        out.append(f'<text x="{x1 + 6:.1f}" y="{y + BAR / 2 + 4}" font-size="12" fill="{INK}">{fmt(v)}</text>')
+        label = row[4] if col == 3 and len(row) > 4 else fmt(v)
+        out.append(f'<text x="{x1 + 6:.1f}" y="{y + BAR / 2 + 4}" font-size="12" fill="{INK}">{label}</text>')
     out.append(f'<text x="{x0 + PANEL_W}" y="{y_bot + 32}" font-size="11" text-anchor="end" fill="{MUTED}">log scale</text>')
     return out
 
@@ -77,7 +80,7 @@ def figure(rows, title, subtitle, path):
         y = TOP + ROW * i + ROW / 2 + 4
         out.append(f'<text x="{LEFT - 12}" y="{y}" font-size="12" text-anchor="end" fill="{INK}">{row[0]} {row[1]}</text>')
     out += panel(LEFT, rows, 2, 1, 100_000, [1, 10, 100, 1000, 10_000, 100_000], fmt_ms, "prover time")
-    out += panel(LEFT + PANEL_W + 90, rows, 3, 100, 100_000, [100, 1000, 10_000, 100_000], fmt_mb, "peak RSS, whole process")
+    out += panel(LEFT + PANEL_W + 90, rows, 3, 1, 100_000, [1, 10, 100, 1000, 10_000, 100_000], fmt_mb, "prover memory")
     out.append("</svg>")
     open(path, "w").write("\n".join(out) + "\n")
 
