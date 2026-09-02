@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="310" viewBox="0 0 960 310" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
-<rect width="960" height="310" fill="#fcfcfb"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="344" viewBox="0 0 960 344" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+<rect width="960" height="344" fill="#fcfcfb"/>
 <text x="16" y="24" font-size="15" font-weight="600" fill="#0b0b0b">fib(10,000) mod 7919, the same algorithm on every system</text>
-<text x="16" y="42" font-size="12" fill="#52514e">fast doubling, 14 rounds instead of 10,000 steps; CPU only, AMD Ryzen 7 5700X; medians of 3</text>
+<text x="16" y="42" font-size="12" fill="#52514e">fast doubling, 14 rounds instead of 10,000 steps; the second zkFOL bar drops the mod and proves the exact 2,090-digit integer; CPU only, AMD Ryzen 7 5700X; medians of 3</text>
 <text x="931" y="24" font-size="12" fill="#52514e">SP1</text>
 <rect x="915" y="14" width="10" height="10" rx="2" fill="#1baf7a"/>
 <text x="836" y="24" font-size="12" fill="#52514e">RISC Zero</text>
@@ -9,58 +9,63 @@
 <text x="769" y="24" font-size="12" fill="#52514e">zkFOL</text>
 <rect x="753" y="14" width="10" height="10" rx="2" fill="#2a78d6"/>
 <text x="178" y="113.0" font-size="12" text-anchor="end" fill="#0b0b0b">zkFOL fibm, doubled</text>
-<text x="178" y="147.0" font-size="12" text-anchor="end" fill="#0b0b0b">RISC Zero composite + fastdbl</text>
-<text x="178" y="181.0" font-size="12" text-anchor="end" fill="#0b0b0b">RISC Zero succinct + fastdbl</text>
-<text x="178" y="215.0" font-size="12" text-anchor="end" fill="#0b0b0b">SP1 core + fastdbl</text>
-<text x="178" y="249.0" font-size="12" text-anchor="end" fill="#0b0b0b">SP1 compressed + fastdbl</text>
+<text x="178" y="147.0" font-size="12" text-anchor="end" fill="#0b0b0b">zkFOL fib, doubled (no mod)</text>
+<text x="178" y="181.0" font-size="12" text-anchor="end" fill="#0b0b0b">RISC Zero composite + fastdbl</text>
+<text x="178" y="215.0" font-size="12" text-anchor="end" fill="#0b0b0b">RISC Zero succinct + fastdbl</text>
+<text x="178" y="249.0" font-size="12" text-anchor="end" fill="#0b0b0b">SP1 core + fastdbl</text>
+<text x="178" y="283.0" font-size="12" text-anchor="end" fill="#0b0b0b">SP1 compressed + fastdbl</text>
 <text x="190" y="62" font-size="13" font-weight="600" fill="#0b0b0b">prover time</text>
-<line x1="190.0" y1="86" x2="190.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="190.0" y="278" font-size="11" text-anchor="middle" fill="#898781">1 ms</text>
-<line x1="256.0" y1="86" x2="256.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="256.0" y="278" font-size="11" text-anchor="middle" fill="#898781">10 ms</text>
-<line x1="322.0" y1="86" x2="322.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="322.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 ms</text>
-<line x1="388.0" y1="86" x2="388.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="388.0" y="278" font-size="11" text-anchor="middle" fill="#898781">1 s</text>
-<line x1="454.0" y1="86" x2="454.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="454.0" y="278" font-size="11" text-anchor="middle" fill="#898781">10 s</text>
-<line x1="520.0" y1="86" x2="520.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="520.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 s</text>
-<line x1="190" y1="86" x2="190" y2="262" stroke="#c3c2b7" stroke-width="1"/>
+<line x1="190.0" y1="86" x2="190.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="190.0" y="312" font-size="11" text-anchor="middle" fill="#898781">1 ms</text>
+<line x1="256.0" y1="86" x2="256.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="256.0" y="312" font-size="11" text-anchor="middle" fill="#898781">10 ms</text>
+<line x1="322.0" y1="86" x2="322.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="322.0" y="312" font-size="11" text-anchor="middle" fill="#898781">100 ms</text>
+<line x1="388.0" y1="86" x2="388.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="388.0" y="312" font-size="11" text-anchor="middle" fill="#898781">1 s</text>
+<line x1="454.0" y1="86" x2="454.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="454.0" y="312" font-size="11" text-anchor="middle" fill="#898781">10 s</text>
+<line x1="520.0" y1="86" x2="520.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="520.0" y="312" font-size="11" text-anchor="middle" fill="#898781">100 s</text>
+<line x1="190" y1="86" x2="190" y2="296" stroke="#c3c2b7" stroke-width="1"/>
 <path d="M190,99.0 h66.0 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-66.0 z" fill="#2a78d6"/>
 <text x="266.0" y="113.0" font-size="12" fill="#0b0b0b">11.5 ms</text>
-<path d="M190,133.0 h231.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-231.4 z" fill="#eb6834"/>
-<text x="431.4" y="147.0" font-size="12" fill="#0b0b0b">3.69 s</text>
-<path d="M190,167.0 h271.1 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-271.1 z" fill="#eb6834"/>
-<text x="471.1" y="181.0" font-size="12" fill="#0b0b0b">14.7 s</text>
-<path d="M190,201.0 h268.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-268.2 z" fill="#1baf7a"/>
-<text x="468.2" y="215.0" font-size="12" fill="#0b0b0b">13.3 s</text>
-<path d="M190,235.0 h305.7 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-305.7 z" fill="#1baf7a"/>
-<text x="505.7" y="249.0" font-size="12" fill="#0b0b0b">49.2 s</text>
-<text x="520" y="294" font-size="11" text-anchor="end" fill="#898781">log scale</text>
+<path d="M190,133.0 h61.9 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-61.9 z" fill="#2a78d6"/>
+<text x="261.9" y="147.0" font-size="12" fill="#0b0b0b">9.98 ms</text>
+<path d="M190,167.0 h231.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-231.4 z" fill="#eb6834"/>
+<text x="431.4" y="181.0" font-size="12" fill="#0b0b0b">3.69 s</text>
+<path d="M190,201.0 h271.1 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-271.1 z" fill="#eb6834"/>
+<text x="471.1" y="215.0" font-size="12" fill="#0b0b0b">14.7 s</text>
+<path d="M190,235.0 h268.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-268.2 z" fill="#1baf7a"/>
+<text x="468.2" y="249.0" font-size="12" fill="#0b0b0b">13.3 s</text>
+<path d="M190,269.0 h305.7 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-305.7 z" fill="#1baf7a"/>
+<text x="505.7" y="283.0" font-size="12" fill="#0b0b0b">49.2 s</text>
+<text x="520" y="328" font-size="11" text-anchor="end" fill="#898781">log scale</text>
 <text x="610" y="62" font-size="13" font-weight="600" fill="#0b0b0b">prover memory</text>
-<line x1="610.0" y1="86" x2="610.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="610.0" y="278" font-size="11" text-anchor="middle" fill="#898781">1 MB</text>
-<line x1="676.0" y1="86" x2="676.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="676.0" y="278" font-size="11" text-anchor="middle" fill="#898781">10 MB</text>
-<line x1="742.0" y1="86" x2="742.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="742.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 MB</text>
-<line x1="808.0" y1="86" x2="808.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="808.0" y="278" font-size="11" text-anchor="middle" fill="#898781">1 GB</text>
-<line x1="874.0" y1="86" x2="874.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="874.0" y="278" font-size="11" text-anchor="middle" fill="#898781">10 GB</text>
-<line x1="940.0" y1="86" x2="940.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
-<text x="940.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 GB</text>
-<line x1="610" y1="86" x2="610" y2="262" stroke="#c3c2b7" stroke-width="1"/>
+<line x1="610.0" y1="86" x2="610.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="610.0" y="312" font-size="11" text-anchor="middle" fill="#898781">1 MB</text>
+<line x1="676.0" y1="86" x2="676.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="676.0" y="312" font-size="11" text-anchor="middle" fill="#898781">10 MB</text>
+<line x1="742.0" y1="86" x2="742.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="742.0" y="312" font-size="11" text-anchor="middle" fill="#898781">100 MB</text>
+<line x1="808.0" y1="86" x2="808.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="808.0" y="312" font-size="11" text-anchor="middle" fill="#898781">1 GB</text>
+<line x1="874.0" y1="86" x2="874.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="874.0" y="312" font-size="11" text-anchor="middle" fill="#898781">10 GB</text>
+<line x1="940.0" y1="86" x2="940.0" y2="296" stroke="#e1e0d9" stroke-width="1"/>
+<text x="940.0" y="312" font-size="11" text-anchor="middle" fill="#898781">100 GB</text>
+<line x1="610" y1="86" x2="610" y2="296" stroke="#c3c2b7" stroke-width="1"/>
 <path d="M610,99.0 h62.0 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-62.0 z" fill="#2a78d6"/>
 <text x="682.0" y="113.0" font-size="12" fill="#0b0b0b">&lt; 10 MB</text>
-<path d="M610,133.0 h160.6 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-160.6 z" fill="#eb6834"/>
-<text x="780.6" y="147.0" font-size="12" fill="#0b0b0b">312 MB</text>
-<path d="M610,167.0 h203.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-203.4 z" fill="#eb6834"/>
-<text x="823.4" y="181.0" font-size="12" fill="#0b0b0b">1.39 GB</text>
-<path d="M610,201.0 h258.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-258.2 z" fill="#1baf7a"/>
-<text x="878.2" y="215.0" font-size="12" fill="#0b0b0b">9.39 GB</text>
-<path d="M610,235.0 h275.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-275.2 z" fill="#1baf7a"/>
-<text x="895.2" y="249.0" font-size="12" fill="#0b0b0b">17 GB</text>
-<text x="940" y="294" font-size="11" text-anchor="end" fill="#898781">log scale</text>
+<path d="M610,133.0 h62.0 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-62.0 z" fill="#2a78d6"/>
+<text x="682.0" y="147.0" font-size="12" fill="#0b0b0b">&lt; 10 MB</text>
+<path d="M610,167.0 h160.6 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-160.6 z" fill="#eb6834"/>
+<text x="780.6" y="181.0" font-size="12" fill="#0b0b0b">312 MB</text>
+<path d="M610,201.0 h203.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-203.4 z" fill="#eb6834"/>
+<text x="823.4" y="215.0" font-size="12" fill="#0b0b0b">1.39 GB</text>
+<path d="M610,235.0 h258.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-258.2 z" fill="#1baf7a"/>
+<text x="878.2" y="249.0" font-size="12" fill="#0b0b0b">9.39 GB</text>
+<path d="M610,269.0 h275.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-275.2 z" fill="#1baf7a"/>
+<text x="895.2" y="283.0" font-size="12" fill="#0b0b0b">17 GB</text>
+<text x="940" y="328" font-size="11" text-anchor="end" fill="#898781">log scale</text>
 </svg>

@@ -29,6 +29,7 @@ defmodule Chart do
   # that genuinely allocate carry their measured figure.
   @fib [
     {"zkFOL", "fibm, doubled", 11.48, 10, "&lt; 10 MB"},
+    {"zkFOL", "fib, doubled (no mod)", 9.98, 10, "&lt; 10 MB"},
     {"RISC Zero", "composite + fastdbl", 3690, 312},
     {"RISC Zero", "succinct + fastdbl", 14730, 1390},
     {"SP1", "core + fastdbl", 13320, 9390},
@@ -64,7 +65,7 @@ defmodule Chart do
     figure(
       @fib,
       "fib(10,000) mod 7919, the same algorithm on every system",
-      "fast doubling, 14 rounds instead of 10,000 steps; CPU only, AMD Ryzen 7 5700X; medians of 3",
+      "fast doubling, 14 rounds instead of 10,000 steps; the second zkFOL bar drops the mod and proves the exact 2,090-digit integer; CPU only, AMD Ryzen 7 5700X; medians of 3",
       "prove_fib10000.svg"
     )
 

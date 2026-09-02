@@ -37,6 +37,10 @@ The zkVM guests use a hand-written `fast_doubling` (source below). zkFOL is hand
 `defrel fibm`, the naive two-call recurrence, and `Zkfol.Doubling` rewrites it to the
 doubling form.
 
+The table also carries zkFOL **without the mod**: `defrel fib`, the same rewrite over the
+exact 2,090-digit integer rather than a four-digit residue. It is there because it is the
+harder claim and still beats every zkVM row, so the mod is not what buys the win.
+
 ![prover time and prover memory, fib(10,000) mod 7919, fast doubling](prove_fib10000.svg)
 
 <table><tr><th><a href="risc0/methods/guest/src/main.rs#L32-L46">RISC Zero guest</a> (hand-written doubling)</th><th><a href="zkfol/definitions.ex#L20-L28">zkFOL</a> (the compiler finds the doubling)</th></tr>
@@ -95,12 +99,15 @@ end
 | system                                                                   |       prove |     verify |       proof | prover memory |
 |--------------------------------------------------------------------------|------------:|-----------:|------------:|--------------:|
 | **[zkFOL `fibm`, doubled](zkfol/definitions.ex#L20-L28)**                | **11.48 ms** | **2.30 ms** | **269.8 KB** |   **< 10 MB** |
+| **[zkFOL `fib`, doubled — no mod](zkfol/definitions.ex#L9-L17)** *(exact 2,090-digit)* | **9.98 ms** | **3.88 ms** | **502.8 KB** |   **< 10 MB** |
 | [RISC Zero composite + fastdbl](risc0/methods/guest/src/main.rs#L32-L46) |      3.69 s |    11.8 ms |    209.6 KB |        312 MB |
 | [RISC Zero succinct + fastdbl](risc0/methods/guest/src/main.rs#L32-L46)  |     14.73 s |    12.4 ms |    223.3 KB |       1.39 GB |
 | [SP1 core + fastdbl](sp1/program/src/main.rs#L30-L44)                    |     13.32 s |    74.3 ms |     2.78 MB |       9.39 GB |
 | [SP1 compressed + fastdbl](sp1/program/src/main.rs#L30-L44)              |     49.24 s |    32.9 ms |     1.27 MB |      17.00 GB |
 
-Prove, zkVM over zkFOL: 321× / 1,280× / 1,160× / 4,290×. Memory: over 30× / 130× / 900× / 1,700×.
+Prove, zkVM over zkFOL: 321× / 1,280× / 1,160× / 4,290× against the reduced row, and
+370× / 1,480× / 1,330× / 4,930× against the unreduced one — which computes the whole
+integer while the guests compute its remainder. Memory: over 30× / 130× / 900× / 1,700×.
 
 ## 2. The floor: a bounds check
 
