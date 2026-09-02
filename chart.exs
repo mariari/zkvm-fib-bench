@@ -24,18 +24,19 @@ defmodule Chart do
   @bar 20
 
   # {system, mode label, prove ms, prover memory MB, memory label}. zkFOL's prover memory
-  # is its increment over the idle Erlang VM, under the ~10 MB noise floor; it is plotted
-  # at the floor and labelled as a bound.
+  # is its increment over the idle Erlang VM. Where that increment is under the ~10 MB
+  # measurement noise the bar is plotted at the floor and labelled as a bound; the rows
+  # that genuinely allocate carry their measured figure.
   @fib [
-    {"zkFOL", "fibm, doubled", 4.82, 10, "&lt; 10 MB"},
+    {"zkFOL", "fibm, doubled", 11.48, 10, "&lt; 10 MB"},
     {"RISC Zero", "composite + fastdbl", 3690, 312},
     {"RISC Zero", "succinct + fastdbl", 14730, 1390},
     {"SP1", "core + fastdbl", 13320, 9390},
     {"SP1", "compressed + fastdbl", 49240, 17000}
   ]
   @default [
-    {"zkFOL", "regsm", 1060, 10, "&lt; 10 MB"},
-    {"zkFOL", "fib, doubled", 8.36, 10, "&lt; 10 MB"},
+    {"zkFOL", "regsm", 1187, 205, "~205 MB"},
+    {"zkFOL", "fib, doubled", 9.98, 10, "&lt; 10 MB"},
     {"RISC Zero", "succinct", 40670, 2300},
     {"SP1", "compressed", 50390, 17070}
   ]
@@ -47,12 +48,12 @@ defmodule Chart do
     {"SP1", "compressed + bounds", 49200, 17010}
   ]
   @sudoku [
-    {"zkFOL", "9x9", 33.31, 10, "&lt; 10 MB"},
+    {"zkFOL", "9x9", 15.95, 25, "~25 MB"},
     {"RISC Zero", "composite, 9x9", 7252, 606},
     {"RISC Zero", "succinct, 9x9", 18040, 1426},
     {"SP1", "core, 9x9", 13687, 9798},
     {"SP1", "compressed, 9x9", 50329, 17208},
-    {"zkFOL", "16x16", 63.22, 35, "35 MB"},
+    {"zkFOL", "16x16", 65.42, 28, "~28 MB"},
     {"RISC Zero", "composite, 16x16", 14725, 1191},
     {"RISC Zero", "succinct, 16x16", 25667, 1429},
     {"SP1", "core, 16x16", 14470, 9949},
@@ -70,7 +71,7 @@ defmodule Chart do
     figure(
       @bounds,
       "bounds check 10 ≤ x ≤ 100",
-      "nothing to compute, so this is the fixed cost of a proof; CPU only, AMD Ryzen 7 5700X; medians of 3",
+      "nothing to compute, so this is the fixed cost of a proof; CPU only, AMD Ryzen 7 5700X",
       "prove_bounds.svg"
     )
 
@@ -84,7 +85,7 @@ defmodule Chart do
     figure(
       @sudoku,
       "sudoku: a completed grid is valid, 9×9 and 16×16",
-      "zkVMs walk each group with a seen array and commit the grid; zkFOL proves the clues with nothing of it public; only the zkFOL bars move with the grid; CPU only, AMD Ryzen 7 5700X; single runs",
+      "zkVMs walk each group with a seen array and commit the grid; zkFOL proves the clues with nothing of it public; only the zkFOL bars move with the grid; CPU only, AMD Ryzen 7 5700X; zkFOL medians of 3, zkVM single runs",
       "prove_sudoku.svg"
     )
   end

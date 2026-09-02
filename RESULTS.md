@@ -13,8 +13,8 @@ Each section shows the code each side wrote, complete with imports, then its num
 zkFOL definitions the benchmark ran are collected in [`zkfol/definitions.ex`](zkfol/definitions.ex).
 
 **Machine:** AMD Ryzen 7 5700X (8c/16t), Linux, CPU proving only, one prover at a time.
-**Versions:** zkFOL 0.4.0, RISC Zero 3.0.5, SP1 6.3.1. Measured August 2026. The zkFOL rows
-span two zinc-plus revisions: `451ba17` for fib and bounds (§1–3), `038adb7` for sudoku (§4).
+**Versions:** zkFOL 0.4.0 (zinc-plus `66776a3`; §2 on `7cf72c4`), RISC Zero 3.0.5, SP1 6.3.1.
+Measured September 2026.
 
 ## Glossary
 
@@ -94,13 +94,13 @@ end
 
 | system                                                                   |       prove |     verify |       proof | prover memory |
 |--------------------------------------------------------------------------|------------:|-----------:|------------:|--------------:|
-| **[zkFOL `fibm`, doubled](zkfol/definitions.ex#L20-L28)**                | **4.82 ms** | **1.4 ms** | **49.8 KB** |   **< 10 MB** |
+| **[zkFOL `fibm`, doubled](zkfol/definitions.ex#L20-L28)**                | **11.48 ms** | **2.30 ms** | **269.8 KB** |   **< 10 MB** |
 | [RISC Zero composite + fastdbl](risc0/methods/guest/src/main.rs#L32-L46) |      3.69 s |    11.8 ms |    209.6 KB |        312 MB |
 | [RISC Zero succinct + fastdbl](risc0/methods/guest/src/main.rs#L32-L46)  |     14.73 s |    12.4 ms |    223.3 KB |       1.39 GB |
 | [SP1 core + fastdbl](sp1/program/src/main.rs#L30-L44)                    |     13.32 s |    74.3 ms |     2.78 MB |       9.39 GB |
 | [SP1 compressed + fastdbl](sp1/program/src/main.rs#L30-L44)              |     49.24 s |    32.9 ms |     1.27 MB |      17.00 GB |
 
-Prove, zkVM over zkFOL: 766× / 3,060× / 2,760× / 10,200×. Memory: over 30× / 130× / 900× / 1,700×.
+Prove, zkVM over zkFOL: 321× / 1,280× / 1,160× / 4,290×. Memory: over 30× / 130× / 900× / 1,700×.
 
 ## 2. The floor: a bounds check
 
@@ -207,12 +207,12 @@ end
 
 | system                                                        | what is proved               |   prove |  verify |    proof | prover memory |
 |---------------------------------------------------------------|------------------------------|--------:|--------:|---------:|--------------:|
-| [zkFOL `regsm`](zkfol/definitions.ex#L42-L48)                 | fib(10,000) mod 7919, linear |  1.06 s | 31.2 ms |   866 KB |       < 10 MB |
-| [zkFOL `fib`, doubled](zkfol/definitions.ex#L9-L17)           | exact fib(10,000), doubling  | 8.36 ms |  3.1 ms |   664 KB |       < 10 MB |
+| [zkFOL `regsm`](zkfol/definitions.ex#L42-L48)                 | fib(10,000) mod 7919, linear |  1.19 s | 34.1 ms | 922.8 KB |       ~205 MB |
+| [zkFOL `fib`, doubled](zkfol/definitions.ex#L9-L17)           | exact fib(10,000), doubling  | 9.98 ms |  3.9 ms | 502.8 KB |       < 10 MB |
 | [RISC Zero succinct](risc0/methods/guest/src/main.rs#L16-L26) | fib(10,000) mod 7919, linear | 40.67 s | 12.5 ms | 223.3 KB |       2.30 GB |
 | [SP1 compressed](sp1/program/src/main.rs#L14-L24)             | fib(10,000) mod 7919, linear | 50.39 s | 35.2 ms |  1.27 MB |      17.07 GB |
 
-Read the loss column too: on `regsm` zkFOL's verify (31 ms) and proof (866 KB) grow with
+Read the loss column too: on `regsm` zkFOL's verify (34 ms) and proof (923 KB) grow with
 the number of steps, while the zkVM's stay constant. `fib` has neither problem because
 the compiler rewrites it to doubling, which is why that is the route a user gets by
 default.
@@ -338,12 +338,12 @@ character-identical apart from entrypoint boilerplate and their read/commit call
 
 | system                                                   | grid  |     prove |   verify |    proof | prover memory |    cycles |
 |-----------------------------------------------------------|-------|----------:|---------:|---------:|--------------:|----------:|
-| **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 9×9   | **33.31 ms** | **3.36 ms** | 429.2 KB |     **< 10 MB** |         — |
+| **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 9×9   | **15.95 ms** | **3.38 ms** | 332.3 KB |      **~25 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 9×9   |   7.252 s | 12.46 ms | 221.9 KB |        606 MB |    65,536 |
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 9×9   |  18.040 s | 12.44 ms | 223.9 KB |       1.43 GB |    65,536 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 9×9   |  13.687 s | 75.92 ms |  2.78 MB |       9.57 GB |    77,067 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 9×9   |  50.329 s | 33.21 ms |  1.27 MB |      16.80 GB |    77,067 |
-| **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 16×16 | **63.22 ms** | **4.15 ms** | 708.9 KB |      **35 MB** |         — |
+| **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 16×16 | **65.42 ms** | **3.54 ms** | 583.7 KB |      **~28 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 16×16 |  14.725 s | 13.23 ms | 246.3 KB |       1.16 GB |   131,072 |
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 16×16 |  25.667 s | 12.67 ms | 225.3 KB |       1.40 GB |   131,072 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 16×16 |  14.470 s | 77.45 ms |  2.78 MB |       9.72 GB |   188,519 |
@@ -356,9 +356,9 @@ relation the branch defines. So the 9×9 → 16×16 step is not a clean scaling 
 the difference is the grid and part is the missing range checks, and the two cannot be
 separated from these rows alone.
 
-Prove at 9×9, zkVM over zkFOL: 218× / 542× / 411× / 1,511×. At 16×16:
-233× / 406× / 229× / 794×. Memory: 150× to 4,300× at 9×9, 34× to 490× at 16×16. zkFOL wins
-verify on both grids (3.36 ms and 4.15 ms against 12.4 to 77.5 ms), which it does not at
+Prove at 9×9, zkVM over zkFOL: 455× / 1,130× / 858× / 3,160×. At 16×16:
+225× / 392× / 221× / 767×. Memory: 24× to 670× at 9×9, 41× to 600× at 16×16. zkFOL wins
+verify on both grids (3.38 ms and 3.54 ms against 12.4 to 77.5 ms), which it does not at
 fib(10,000) — the verify win belongs to small claims, so name the size when you quote it.
 
 **The cost tracks the pad, not the puzzle.** A third grid size makes this plain. From 4×4 to
@@ -368,7 +368,7 @@ padding to 65,536 cycles, and only doubles at 16×16 when the pad doubles to 131
 
 | system / mode              |    4×4   |    9×9   |   16×16  |
 |----------------------------|---------:|---------:|---------:|
-| **zkFOL**                  |        — | 33.31 ms | 63.22 ms |
+| **zkFOL**                  |        — | 15.95 ms | 65.42 ms |
 | RISC Zero composite        |  7.314 s |  7.252 s | 14.725 s |
 | RISC Zero succinct         | 18.130 s | 18.040 s | 25.667 s |
 | SP1 core                   | 13.368 s | 13.687 s | 14.470 s |
@@ -389,12 +389,15 @@ puzzle head and a `families4`, not a different call.
 ## How memory is measured
 
 The zkVM column is the peak RSS of the host process (`ru_maxrss`), which is the prover.
-zkFOL's prover runs inside the Erlang VM as a NIF, and the VM idles at 230 to 380 MB
+zkFOL's prover runs inside the Erlang VM as a NIF, and the VM idles at 190 to 600 MB
 before any proof, so its column is what the prover itself added: the VM's high-water
 mark after the peak counter is reset at entry, less its resident size at that moment.
-That increment is under the ~10 MB measurement noise on every row but exact fib(10,000)
-on the linear route, which adds 1.23 GB. Whole-process peaks, for reference: 274 to
-562 MB on the small rows, 1.6 GB on that one.
+That increment stays under the ~10 MB measurement noise on the doubled fib rows, and is
+~25 MB and ~28 MB on the 9×9 and 16×16 sudoku rows, ~205 MB on `regsm`, and ~980 MB on
+exact fib(10,000) by the linear route. Whole-process peaks, for reference: 234 to 358 MB
+on the small rows, 500 MB on `regsm`, 1.5 GB on the linear exact row. The increment is
+order-dependent when rows run back to back in one VM — `regsm` measured 0, 205 and
+210 MB across three runs as the heap settled — so treat it as a band, not a point.
 
 ## Caveats that ship with the tables
 
@@ -409,16 +412,16 @@ on the linear route, which adds 1.23 GB. Whole-process peaks, for reference: 274
   relation the branch defines carries the three distinctness families without
   `between(1, n)`. The 16×16 row therefore understates the grid's cost by whatever the range
   checks would add, and the two effects cannot be separated from these rows alone.
-- **The sudoku rows are single runs**, not medians of 3 like the fib rows. Where both
+- **zkVM sudoku cells are single runs**, not medians of 3 like the fib cells. Where both
   protocols were used on the same cell the two agreed within a few percent, so read the
-  sudoku seconds as ±few-percent.
+  sudoku seconds as ±few-percent. The zkFOL rows in §1, §3 and §4 are medians of 3.
 - **Sudoku is not like for like.** The zkVM guests commit the grid, so it is public and
   already completed; zkFOL unifies an answer against the seventeen clues first (105 ms,
   excluded from its prove column) and publishes nothing. Quote the row with the claim
   attached, not as a bare speed ratio.
-- **Different zinc-plus revision.** The sudoku zkFOL row was measured on backend
-  `zinc-plus-038adb7`; the fib and bounds rows on `zinc-plus-7cf72c4`. Sudoku and fib
-  zkFOL numbers are not strictly same-build comparable.
+- **Two zinc-plus revisions.** §1, §3 and §4 are `66776a3`; §2 is `7cf72c4`. The prover
+  moves quickly between revisions — §1's proof grew from 49.8 KB to 269.8 KB across this
+  one — so figures from different revisions are not strictly comparable.
 
 ## Reproduce
 

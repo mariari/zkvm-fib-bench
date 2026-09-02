@@ -27,8 +27,8 @@
 <line x1="520.0" y1="86" x2="520.0" y2="262" stroke="#e1e0d9" stroke-width="1"/>
 <text x="520.0" y="278" font-size="11" text-anchor="middle" fill="#898781">100 s</text>
 <line x1="190" y1="86" x2="190" y2="262" stroke="#c3c2b7" stroke-width="1"/>
-<path d="M190,99.0 h41.1 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-41.1 z" fill="#2a78d6"/>
-<text x="241.1" y="113.0" font-size="12" fill="#0b0b0b">4.82 ms</text>
+<path d="M190,99.0 h66.0 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-66.0 z" fill="#2a78d6"/>
+<text x="266.0" y="113.0" font-size="12" fill="#0b0b0b">11.5 ms</text>
 <path d="M190,133.0 h231.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-231.4 z" fill="#eb6834"/>
 <text x="431.4" y="147.0" font-size="12" fill="#0b0b0b">3.69 s</text>
 <path d="M190,167.0 h271.1 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-271.1 z" fill="#eb6834"/>
