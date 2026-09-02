@@ -108,8 +108,9 @@ against RISC Zero composite 7.25 s / 606 MB, RISC Zero succinct 18.04 s / 1.43 G
 13.69 s / 9.57 GB, SP1 compressed 50.33 s / 16.80 GB.
 
 Note the two sides prove **different statements**: the guests `commit(&grid)`, so the grid
-is public and already completed, while zkFOL unifies an answer against a seventeen-clue
-puzzle and reports `public_cols: 0` — nothing of the grid is revealed. At 16×16 zkFOL is 65.42 ms against RISC Zero composite 14.73 s and SP1 compressed 50.17 s.
+is public, while zkFOL reports `public_cols: 0` — nothing of the grid is revealed. zkFOL can
+also *solve* the 9×9 from its seventeen clues (~160 ms), which neither guest can express at
+all: both only check a grid they are handed. At 16×16 zkFOL is 65.42 ms against RISC Zero composite 14.73 s and SP1 compressed 50.17 s.
 Across 4×4, 9×9 and 16×16 the guest cycles rise 6.9× while SP1 compressed moves under 1.4%
 (49.5 → 50.2 s), and zkFOL is the only column that responds to the puzzle at all, rising 4.1×
 from 9×9 to 16×16: the zkVM cost tracks its cycle pad, not the puzzle. Full tables in [`RESULTS.md`](RESULTS.md#4-sudoku-a-completed-grid-is-valid).

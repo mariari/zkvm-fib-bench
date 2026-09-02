@@ -224,10 +224,9 @@ n columns, n b×b boxes — must be a permutation of {1,…,n}.
 
 The two sides are **not proving the same thing**, and the difference matters more than the
 timings. The zkVM guests take a finished grid and commit it, so they prove *"this public
-grid is valid"*. zkFOL is handed the seventeen-clue `puzzle/2` head, unifies an answer
-against it, and reports `public_cols: 0` with `claims: []` — it proves *"a grid exists
-satisfying these clues"* and reveals nothing of the grid. zkFOL is doing strictly more
-work and disclosing strictly less.
+grid is valid"*. zkFOL proves *"a grid exists satisfying these clues"* — it reports
+`public_cols: 0` with `claims: []`, so nothing of the grid is disclosed, where the guests
+publish all of it.
 
 ![prover time and prover memory, sudoku 9x9 and 16x16](prove_sudoku.svg)
 
@@ -361,6 +360,29 @@ Prove at 9×9, zkVM over zkFOL: 455× / 1,130× / 858× / 3,160×. At 16×16:
 verify on both grids (3.38 ms and 3.54 ms against 12.4 to 77.5 ms), which it does not at
 fib(10,000) — the verify win belongs to small claims, so name the size when you quote it.
 
+### Solving, not only checking
+
+The rows above all prove a completed grid, which is the only thing the zkVM guests can
+express: their `main` reads a grid, commits it, and asserts each group is a permutation.
+There is no path in either guest from the seventeen clues to the grid — a solver would have
+to be written as a guest program and proved as one, and it is not what these benchmarks run.
+
+zkFOL derives the grid from the clues directly, because the relations run in both
+directions: the same `solved/1` that checks a grid also answers one.
+
+| | solve the 9×9 from its seventeen clues |
+|---|---|
+| **zkFOL** | **~160 ms** |
+| RISC Zero | not expressible — the guest checks a grid it is handed |
+| SP1 | not expressible — the guest checks a grid it is handed |
+
+That is a capability difference, not a speed one, so it does not belong in the prove
+columns: the proved rows above are a grid the prover already holds, which is the ordinary
+shape of a zero-knowledge proof. It is worth stating because "prove sudoku validity" and
+"solve a sudoku and prove the answer" are different products, and only one system here
+offers the second. The 16×16 has nothing to solve — its head names every cell — so this
+applies to the 9×9 alone.
+
 **The cost tracks the pad, not the puzzle.** A third grid size makes this plain. From 4×4 to
 16×16 the guest cycles rise 6.9× (27,406 → 188,519) while SP1 compressed moves 49.493 s →
 50.169 s, under 1.4%. RISC Zero composite is flat 7.314 s → 7.252 s from 4×4 to 9×9, both
@@ -415,10 +437,10 @@ order-dependent when rows run back to back in one VM — `regsm` measured 0, 205
 - **zkVM sudoku cells are single runs**, not medians of 3 like the fib cells. Where both
   protocols were used on the same cell the two agreed within a few percent, so read the
   sudoku seconds as ±few-percent. The zkFOL rows in §1, §3 and §4 are medians of 3.
-- **Sudoku is not like for like.** The zkVM guests commit the grid, so it is public and
-  already completed; zkFOL unifies an answer against the seventeen clues first (105 ms,
-  excluded from its prove column) and publishes nothing. Quote the row with the claim
-  attached, not as a bare speed ratio.
+- **Sudoku is not like for like.** The zkVM guests commit the grid, so it is public;
+  zkFOL publishes none of it. Both prove a completed grid the prover holds — the solve in
+  §4 is a separate capability, measured separately, and is not in any prove column. Quote
+  the rows with the claim attached, not as a bare speed ratio.
 - **Two zinc-plus revisions.** §1, §3 and §4 are `66776a3`; §2 is `7cf72c4`. The prover
   moves quickly between revisions — §1's proof grew from 49.8 KB to 269.8 KB across this
   one — so figures from different revisions are not strictly comparable.
