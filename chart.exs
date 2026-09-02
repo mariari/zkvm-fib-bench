@@ -1,7 +1,8 @@
 #!/usr/bin/env elixir
-# Draw the three figures in RESULTS.md from the numbers in its tables.
+# Draw the figures in RESULTS.md from the numbers in its tables.
 #
-#     elixir chart.exs     # writes prove_fib10000.svg, prove_bounds.svg, prove_default.svg
+#     elixir chart.exs     # writes prove_fib10000.svg, prove_bounds.svg,
+#                          #        prove_default.svg, prove_sudoku.svg
 #
 # Each figure has two panels on log axes, prover time and prover memory, one bar per
 # (system, mode). The numbers are the same-rig medians recorded in RESULTS.md; edit the
@@ -45,6 +46,18 @@ defmodule Chart do
     {"SP1", "core + bounds", 13230, 9360},
     {"SP1", "compressed + bounds", 49200, 17010}
   ]
+  @sudoku [
+    {"zkFOL", "9x9", 33.31, 10, "&lt; 10 MB"},
+    {"RISC Zero", "composite, 9x9", 7252, 606},
+    {"RISC Zero", "succinct, 9x9", 18040, 1426},
+    {"SP1", "core, 9x9", 13687, 9798},
+    {"SP1", "compressed, 9x9", 50329, 17208},
+    {"zkFOL", "16x16", 63.22, 35, "35 MB"},
+    {"RISC Zero", "composite, 16x16", 14725, 1191},
+    {"RISC Zero", "succinct, 16x16", 25667, 1429},
+    {"SP1", "core, 16x16", 14470, 9949},
+    {"SP1", "compressed, 16x16", 50169, 17077}
+  ]
 
   def main do
     figure(
@@ -66,6 +79,13 @@ defmodule Chart do
       "fib(10,000), each system's default route",
       "the published linear loop on the zkVMs; regsm like for like and plain fib on zkFOL; CPU only, AMD Ryzen 7 5700X; medians of 3",
       "prove_default.svg"
+    )
+
+    figure(
+      @sudoku,
+      "sudoku: a completed grid is valid, 9×9 and 16×16",
+      "zkVMs walk each group with a seen array and commit the grid; zkFOL proves the clues with nothing of it public; only the zkFOL bars move with the grid; CPU only, AMD Ryzen 7 5700X; single runs",
+      "prove_sudoku.svg"
     )
   end
 

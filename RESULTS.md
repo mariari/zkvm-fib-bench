@@ -6,12 +6,15 @@ We benchmark the same computations on zkFOL, RISC Zero and SP1:
    system.
 2. **bounds check 10 ≤ x ≤ 100.** Just the cost of constraining the given argument.
 3. **fib(10,000).** What just running Fibonacci looks like for your average use case.
+4. **Sudoku validity.** A claim with no recurrence at all, only structure — and the one
+   place the two sides prove genuinely different statements (see §4).
 
 Each section shows the code each side wrote, complete with imports, then its numbers. The
 zkFOL definitions the benchmark ran are collected in [`zkfol/definitions.ex`](zkfol/definitions.ex).
 
 **Machine:** AMD Ryzen 7 5700X (8c/16t), Linux, CPU proving only, one prover at a time.
-**Versions:** zkFOL 0.4.0 (zinc-plus `451ba17`), RISC Zero 3.0.5, SP1 6.3.1. Measured August 2026.
+**Versions:** zkFOL 0.4.0, RISC Zero 3.0.5, SP1 6.3.1. Measured August 2026. The zkFOL rows
+span two zinc-plus revisions: `451ba17` for fib and bounds (§1–3), `038adb7` for sudoku (§4).
 
 ## Glossary
 
@@ -214,6 +217,175 @@ the number of steps, while the zkVM's stay constant. `fib` has neither problem b
 the compiler rewrites it to doubling, which is why that is the route a user gets by
 default.
 
+## 4. Sudoku: a completed grid is valid
+
+A different shape of claim: no recurrence, just structure. Each of the 3n groups — n rows,
+n columns, n b×b boxes — must be a permutation of {1,…,n}.
+
+The two sides are **not proving the same thing**, and the difference matters more than the
+timings. The zkVM guests take a finished grid and commit it, so they prove *"this public
+grid is valid"*. zkFOL is handed the seventeen-clue `puzzle/2` head, unifies an answer
+against it, and reports `public_cols: 0` with `claims: []` — it proves *"a grid exists
+satisfying these clues"* and reveals nothing of the grid. zkFOL is doing strictly more
+work and disclosing strictly less.
+
+![prover time and prover memory, sudoku 9x9 and 16x16](prove_sudoku.svg)
+
+<table><tr><th><a href="zkfol/definitions.ex#L60-L91">zkFOL</a> (the groups are relations over the grid)</th><th><a href="risc0/methods/guest/src/bin/sudoku.rs">RISC Zero / SP1 guest</a> (walk each group with a seen array)</th></tr>
+<tr><td>
+
+```elixir
+defrel sudoku(x, blocks) do
+  length(x, n)
+  n = blocks ** 2
+  blocks > 0
+  each(each(between(1, n)), x)
+  each(all_distinct, x)
+  column(x, cols)
+  each(all_distinct, cols)
+  boxes(blocks, x, bs)
+  each(all_distinct, bs)
+end
+
+defrel boxes(n, rows, bs) do
+  map(chunk(n), rows, runs)
+  chunk(n, runs, bands)
+  map(column, bands, stacks)
+  map(map(concat), stacks, grouped)
+  concat(grouped, bs)
+end
+
+defrel column([[] | _], [])
+
+defrel column(rows, [c | cs]) do
+  heads(rows, c, rest)
+  column(rest, cs)
+end
+
+defrel heads([], [], [])
+
+defrel heads([[h | t] | rs], [h | hs], [t | ts]) do
+  heads(rs, hs, ts)
+end
+```
+
+</td><td>
+
+```rust
+fn groups(grid: &[u32], n: usize, b: usize) -> Vec<Vec<u32>> {
+    let mut g = vec![vec![0u32; n]; 3 * n];
+    for r in 0..n {
+        for c in 0..n {
+            let val = grid[n * r + c];
+            g[r][c] = val;
+            g[n + c][r] = val;
+            let box_id = b * (r / b) + c / b;
+            let pos = b * (r % b) + c % b;
+            g[2 * n + box_id][pos] = val;
+        }
+    }
+    g
+}
+
+fn is_permutation(cells: &[u32], n: usize) -> bool {
+    let mut seen = vec![false; n];
+    for &v in cells {
+        if v < 1 || v as usize > n {
+            return false;
+        }
+        let idx = v as usize - 1;
+        if seen[idx] {
+            return false;
+        }
+        seen[idx] = true;
+    }
+    seen.iter().all(|&s| s)
+}
+
+fn box_side(n: usize) -> usize {
+    let mut b = 0;
+    while (b + 1) * (b + 1) <= n {
+        b += 1;
+    }
+    assert_eq!(b * b, n, "perfect square");
+    b
+}
+
+fn main() {
+    let n: u32 = env::read();
+    let grid: Vec<u32> = env::read();
+    env::commit(&n);
+    env::commit(&grid);
+
+    let n = n as usize;
+    assert_eq!(grid.len(), n * n, "");
+    let b = box_side(n);
+
+    for group in groups(&grid, n, b).iter() {
+        assert!(is_permutation(group, n), "");
+    }
+}
+```
+
+</td></tr></table>
+
+The guests **construct** the 3n groups into a `Vec<Vec<u32>>` and walk each with a `seen`
+array; the transposition is imperative data movement done beside the grid. zkFOL says
+`column(x, cols)` and `boxes(blocks, x, bs)` as relations and `each(all_distinct, …)` over
+them — the rearrangements are read off the grid's own cells. `all_distinct` lowers to
+`all_dif` for AL and to `Zkfol.Ast.distinct` for the proof. The two zkVM guests are
+character-identical apart from entrypoint boilerplate and their read/commit calls.
+
+| system                                                   | grid  |     prove |   verify |    proof | prover memory |    cycles |
+|-----------------------------------------------------------|-------|----------:|---------:|---------:|--------------:|----------:|
+| **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 9×9   | **33.31 ms** | **3.36 ms** | 429.2 KB |     **< 10 MB** |         — |
+| [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 9×9   |   7.252 s | 12.46 ms | 221.9 KB |        606 MB |    65,536 |
+| [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 9×9   |  18.040 s | 12.44 ms | 223.9 KB |       1.43 GB |    65,536 |
+| [SP1 core](sp1/program/src/bin/sudoku.rs)                | 9×9   |  13.687 s | 75.92 ms |  2.78 MB |       9.57 GB |    77,067 |
+| [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 9×9   |  50.329 s | 33.21 ms |  1.27 MB |      16.80 GB |    77,067 |
+| **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 16×16 | **63.22 ms** | **4.15 ms** | 708.9 KB |      **35 MB** |         — |
+| [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 16×16 |  14.725 s | 13.23 ms | 246.3 KB |       1.16 GB |   131,072 |
+| [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 16×16 |  25.667 s | 12.67 ms | 225.3 KB |       1.40 GB |   131,072 |
+| [SP1 core](sp1/program/src/bin/sudoku.rs)                | 16×16 |  14.470 s | 77.45 ms |  2.78 MB |       9.72 GB |   188,519 |
+| [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 16×16 |  50.169 s | 32.67 ms |  1.27 MB |      16.68 GB |   188,519 |
+
+**The two zkFOL rows are not the same relation.** The 9×9 row is sudoku proper: the clues,
+the three distinctness families, and the `between(1, n)` range checks. The 16×16 row carries
+the clues and the families but not the range checks, because that is the only order-four
+relation the branch defines. So the 9×9 → 16×16 step is not a clean scaling factor — part of
+the difference is the grid and part is the missing range checks, and the two cannot be
+separated from these rows alone.
+
+Prove at 9×9, zkVM over zkFOL: 218× / 542× / 411× / 1,511×. At 16×16:
+233× / 406× / 229× / 794×. Memory: 150× to 4,300× at 9×9, 34× to 490× at 16×16. zkFOL wins
+verify on both grids (3.36 ms and 4.15 ms against 12.4 to 77.5 ms), which it does not at
+fib(10,000) — the verify win belongs to small claims, so name the size when you quote it.
+
+**The cost tracks the pad, not the puzzle.** A third grid size makes this plain. From 4×4 to
+16×16 the guest cycles rise 6.9× (27,406 → 188,519) while SP1 compressed moves 49.493 s →
+50.169 s, under 1.4%. RISC Zero composite is flat 7.314 s → 7.252 s from 4×4 to 9×9, both
+padding to 65,536 cycles, and only doubles at 16×16 when the pad doubles to 131,072.
+
+| system / mode              |    4×4   |    9×9   |   16×16  |
+|----------------------------|---------:|---------:|---------:|
+| **zkFOL**                  |        — | 33.31 ms | 63.22 ms |
+| RISC Zero composite        |  7.314 s |  7.252 s | 14.725 s |
+| RISC Zero succinct         | 18.130 s | 18.040 s | 25.667 s |
+| SP1 core                   | 13.368 s | 13.687 s | 14.470 s |
+| SP1 compressed             | 49.493 s | 50.329 s | 50.169 s |
+
+zkFOL is the only column that responds to the puzzle at all: it rises from 9×9 to 16×16
+while SP1 compressed *falls* 0.3% over the same step. Read the zkFOL rise as a direction,
+not a factor — the 16×16 relation drops the range checks, so it understates the true cost of
+the larger grid. That direction is the point: one column pays for the claim, the other for
+the machine.
+
+The zkFOL 4×4 cell is empty because no order-two relation exists: `families` and
+`families16` hard-code box side 3 and 4, and the generic `sudoku/2` cannot stand in for them
+— run without a `puzzle` clue head it does not lower, the `Zkfol.Phi` pass refusing with
+`{:unliftable_term, %{term: :row}}` at every grid size. Filling the cell needs an order-two
+puzzle head and a `families4`, not a different call.
+
 ## How memory is measured
 
 The zkVM column is the peak RSS of the host process (`ru_maxrss`), which is the prover.
@@ -233,6 +405,20 @@ on the linear route, which adds 1.23 GB. Whole-process peaks, for reference: 274
   RISC Zero's receipt is 521 bytes with ~3 ms verify, at several times the prove time.
 - **Out of bounds is unprovable on both sides**: zkFOL refuses (`no_answer`), the guest
   panics and no receipt is produced.
+- **The 16×16 row omits the range checks.** Only the 9×9 row is sudoku proper; the order-four
+  relation the branch defines carries the three distinctness families without
+  `between(1, n)`. The 16×16 row therefore understates the grid's cost by whatever the range
+  checks would add, and the two effects cannot be separated from these rows alone.
+- **The sudoku rows are single runs**, not medians of 3 like the fib rows. Where both
+  protocols were used on the same cell the two agreed within a few percent, so read the
+  sudoku seconds as ±few-percent.
+- **Sudoku is not like for like.** The zkVM guests commit the grid, so it is public and
+  already completed; zkFOL unifies an answer against the seventeen clues first (105 ms,
+  excluded from its prove column) and publishes nothing. Quote the row with the claim
+  attached, not as a bare speed ratio.
+- **Different zinc-plus revision.** The sudoku zkFOL row was measured on backend
+  `zinc-plus-038adb7`; the fib and bounds rows on `zinc-plus-7cf72c4`. Sudoku and fib
+  zkFOL numbers are not strictly same-build comparable.
 
 ## Reproduce
 
@@ -251,6 +437,19 @@ example in `Examples.EBench`.
 | `regsm`         | [`regsm`](zkfol/definitions.ex#L42-L48)                                                | `measured_registers_fibonacci_mod(10_000)` |
 | `regs`          | [`regs`](zkfol/definitions.ex#L32-L38), the exact integer                              | `measured_registers_fibonacci(10_000)`     |
 | `fib`, doubled  | [`fib`](zkfol/definitions.ex#L9-L17), the exact integer, rewritten by `Zkfol.Doubling` | `measured_doubled_fibonacci(10_000)`       |
+
+Sudoku cells come from `./run_sudoku.sh <n>` or the binaries directly
+(`risc0/target/release/sudoku <n> <mode>`, `sp1/script/target/release/sudoku <n> <mode>`),
+one run each with peak RSS taken the same way. The zkFOL sudoku row is the front door
+rather than an `EBench` example:
+
+```elixir
+Zkfol.eval!(Examples.ESudoku.solved(), Examples.ESudoku.act(), [])
+|> Zkfol.Query.statement()
+|> Zkfol.compile()
+```
+
+with `Zkfol.Log.report(Zkfol.Log.snapshot(), ran)` for the timings.
 
 The definitions in `zkfol/definitions.ex` are for reading; they run inside the zkfol
 application, from its shell:
