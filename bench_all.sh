@@ -5,7 +5,7 @@
 # Runs every cell SEQUENTIALLY (never two provers at once -- the compressed/
 # recursion modes peak at ~17 GB RSS) and prints one summary line per cell:
 #
-#   CELL system=<risc0|sp1> mode=<...> n=<...> prove_s=<...> verify_ms=<...> \
+#   CELL system=<risc0|sp1|jolt> mode=<...> n=<...> prove_s=<...> verify_ms=<...> \
 #        proof_bytes=<...> peak_rss_kb=<...> cycles=<...>
 #
 # Peak RSS comes from /usr/bin/time -v when GNU time is installed, and otherwise
@@ -29,6 +29,9 @@
 #   export PATH="$HOME/.sp1/bin:$PATH"
 #   sp1up
 #
+#   # Jolt: no installer. jolt/rust-toolchain.toml pins channel 1.95 and the
+#   # riscv32imac/riscv64imac targets; rustup fetches them on first cargo use.
+#
 #   # Optional, for peak-RSS reporting via /usr/bin/time -v (falls back to a
 #   # python3 wait4() wrapper, which reports the same ru_maxrss, if absent):
 #   sudo pacman -S time                    # Debian/Ubuntu: sudo apt install time
@@ -48,6 +51,7 @@ export SP1_PROVER=cpu
 
 RISC0_BIN="$ROOT/risc0/target/release/host"
 SP1_BIN="$ROOT/sp1/script/target/release/fibonacci-script"
+JOLT_BIN="$ROOT/jolt/target/release/host"
 
 # Host rustc must be >= 1.90 for the risc0 host crates; pick a toolchain that is.
 CARGO_TC=""
@@ -58,6 +62,9 @@ fi
 [[ -x "$RISC0_BIN" ]] || ( cd "$ROOT/risc0" && cargo $CARGO_TC build --release )
 [[ -x "$SP1_BIN"   ]] || ( cd "$ROOT/sp1/script" && \
                            RUSTFLAGS="-C target-cpu=native" cargo $CARGO_TC build --release )
+# No $CARGO_TC for jolt: its rust-toolchain.toml pins the channel *and* the
+# RISC-V targets, and an explicit `cargo +<version>` overrides the file.
+[[ -x "$JOLT_BIN"  ]] || ( cd "$ROOT/jolt" && cargo build --release )
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -86,6 +93,7 @@ cell() {
     case "$sys" in
         risc0) dir="$ROOT/risc0";      bin="$RISC0_BIN" ;;
         sp1)   dir="$ROOT/sp1/script"; bin="$SP1_BIN"   ;;
+        jolt)  dir="$ROOT/jolt";       bin="$JOLT_BIN"  ;;
     esac
     : > "$TMP/p" ; : > "$TMP/v" ; : > "$TMP/r"
     local bytes="?" cycles="?" out
@@ -119,6 +127,9 @@ cell sp1   core       1000   1200
 cell sp1   core       10000  1200
 cell sp1   compressed 1000   1800
 cell sp1   compressed 10000  1800
+# Jolt has one proving mode -- no succinct/composite or core/compressed axis.
+cell jolt  stark      1000   1800
+cell jolt  stark      10000  1800
 
 # Fast-doubling guest: same journal (n, F(n) mod 7919, F(n+1) mod 7919), ~log2(n)
 # iterations instead of n. This is the best-vs-best row against a log-depth prover.
@@ -127,6 +138,8 @@ cell risc0 succinct+fastdbl   10000  1200
 cell sp1   core+fastdbl       1000   1200
 cell sp1   core+fastdbl       10000  1200
 cell sp1   compressed+fastdbl 10000  1800
+cell jolt  stark+fastdbl      1000   1200
+cell jolt  stark+fastdbl      10000  1200
 
 # Bounds check: enforce 10 <= x <= 100 and commit x. Not a fib claim at all --
 # this is the floor workload, the smallest thing worth proving. The n column is
@@ -136,6 +149,7 @@ cell risc0 composite+bounds  42  900
 cell risc0 succinct+bounds   42  1200
 cell sp1   core+bounds       42  1200
 cell sp1   compressed+bounds 42  1800
+cell jolt  stark+bounds      42  1200
 
 # SNARK wraps. Both need Docker (risc0's stark-to-snark and sp1's gnark FFI both
 # shell out to it), and sp1 additionally downloads ~9 GB of circuit artifacts.

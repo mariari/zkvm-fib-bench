@@ -1,0 +1,9 @@
+# Jolt pins its own toolchain and RISC-V targets; this mirrors a16z/jolt's
+# rust-toolchain.toml at the rev in Cargo.toml. Do not build this directory
+# with an explicit `cargo +<version>` -- that overrides the file and the
+# riscv targets go missing.
+[toolchain]
+channel = "1.95"
+targets = ["riscv32imac-unknown-none-elf", "riscv64imac-unknown-none-elf"]
+profile = "minimal"
+components = ["cargo", "rustc", "clippy", "rustfmt"]
