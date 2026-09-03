@@ -1,0 +1,17 @@
+[package]
+name = "jolt-fib-host"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Jolt publishes no crates.io release, so the SDK is pinned by rev the way
+# risc0/ pins 3.0.5 and sp1/ pins 6.3.1. `host` turns on the prover side.
+jolt-sdk = { git = "https://github.com/a16z/jolt", rev = "aec34d10a6b5e96e698ee933d61a7c32a5a9b678", features = ["host"] }
+guest = { package = "jolt-fib-guest", path = "./guest" }
+
+[[bin]]
+name = "host"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3

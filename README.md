@@ -1,9 +1,9 @@
 # zkvm-fib-bench
 
-A tiny, reproducible **fib(N) benchmark for RISC Zero and SP1** on current releases,
-that reports **prove *and* verify** time (plus proof size and guest cycles).
+A tiny, reproducible **fib(N) benchmark for RISC Zero, SP1 and Jolt** on current
+releases, that reports **prove *and* verify** time (plus proof size and guest cycles).
 
-Both zkVMs run the **identical** program — the exact one behind
+All three zkVMs run the **identical** program — the exact one behind
 [zkbenchmarks.com](https://zkbenchmarks.com) (source:
 [yetanotherco/zkvm_benchmarks](https://github.com/yetanotherco/zkvm_benchmarks)):
 
@@ -14,7 +14,8 @@ commit(n); commit(a); commit(b);
 ```
 
 The public site records only one end-to-end *prove* time; this harness additionally
-times **verify** separately. Versions: **RISC Zero 3.0.5**, **SP1 6.3.1**.
+times **verify** separately. Versions: **RISC Zero 3.0.5**, **SP1 6.3.1**, **Jolt**
+pinned by git rev (`aec34d1`) — it has no crates.io release.
 
 ## Prerequisites
 
@@ -28,6 +29,9 @@ curl -L https://risczero.com/install | bash && rzup install
 # SP1 toolchain (cargo-prove + succinct toolchain)
 curl -L https://sp1up.succinct.xyz | bash && sp1up
 
+# Jolt needs no installer: jolt/rust-toolchain.toml pins channel 1.95 and the
+# riscv32imac/riscv64imac targets, which rustup fetches on first cargo use.
+
 # Docker — only needed for the Groth16 (SNARK) phase, and for the RISC Zero
 # guest build on very new host toolchains (see note below).
 ```
@@ -35,8 +39,8 @@ curl -L https://sp1up.succinct.xyz | bash && sp1up
 ## Run
 
 ```bash
-./run_fib.sh                 # fib(10000), STARK: risc0 succinct + sp1 compressed
-./run_fib.sh 10000 snark     # Groth16 SNARK for both (needs Docker running)
+./run_fib.sh                 # fib(10000), STARK: risc0 succinct + sp1 compressed + jolt
+./run_fib.sh 10000 snark     # Groth16 SNARK for risc0 + sp1 (needs Docker running)
 ./run_fib.sh 100000 both     # STARK + SNARK at N=100000
 
 ./bench_all.sh               # full (system, mode, n) sweep, 3 reps, median + peak RSS
@@ -54,7 +58,8 @@ BENCH sp1   mode=compressed n=10000 prove_s=53.328 verify_ms=34.962 proof_bytes=
 `bench_all.sh` runs every cell sequentially (never two provers at once — compressed peaks at
 ~17 GB) and prints one `CELL …` line per cell, adding `peak_rss_kb`.
 
-Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 | plonk`.
+Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 | plonk`;
+Jolt `stark` — it has a single proving mode and no SNARK wrap.
 Append a guest-algorithm suffix to any mode:
 
 | suffix | guest | journal |
@@ -74,6 +79,7 @@ Append a guest-algorithm suffix to any mode:
 |---|---|
 | `risc0/` | RISC Zero project (guest `methods/guest`, timing host `host/src/main.rs`) — pinned to `risc0-zkvm = 3.0.5` |
 | `sp1/`   | SP1 project (`program/` guest, `script/` timing host) — pinned to `sp1 = 6.3.1` (standalone; no monorepo needed) |
+| `jolt/`  | Jolt project (`guest/` guest, `src/main.rs` timing host) — `jolt-sdk` pinned by git rev (standalone; no monorepo needed) |
 | `run_fib.sh` | one-shot builder/runner |
 | `bench_all.sh` | full (system, mode, n) sweep: 3 reps, median, peak RSS per cell |
 | `RESULTS.md` | measured numbers + analysis (incl. why this is/isn't a fair comparison vs a specialized prover) |
@@ -88,6 +94,20 @@ reproducible ELF). If your host toolchain is older you can drop that and build n
 rustc 1.97.0 with the rzup guest toolchain — the panic above did not occur — so Docker is
 required only for the groth16 cells (`WRAP=1`), where risc0's stark-to-snark and SP1's gnark
 FFI both shell out to it.
+
+## Note: Jolt's trace bound is a compile-time constant
+
+risc0 and SP1 size the trace at run time. Jolt does not: `max_trace_length` is an
+argument to the `#[jolt::provable]` attribute in `jolt/guest/src/lib.rs`, fixed at
+compile time for every n. It is set to 2^21, which covers the linear program up to
+n=100000; raise it before sweeping further, and rebuild (see the rebuild warning
+above — the scripts only build when the binary is absent).
+
+This is worth an eye during review: if Jolt sizes the prover to that declared bound
+rather than to the actual trace, then every Jolt row costs the same regardless of n,
+and the n=1000 and n=10000 cells are not comparable to each other or to the other two
+VMs. One run at each n settles it — if the prove times are flat, the constant needs
+tuning per n rather than one bound for the whole sweep.
 
 ## Results
 

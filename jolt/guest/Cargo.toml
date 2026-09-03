@@ -1,0 +1,21 @@
+[package]
+name = "jolt-fib-guest"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+guest = []
+
+[dependencies]
+jolt = { package = "jolt-sdk", git = "https://github.com/a16z/jolt", rev = "aec34d10a6b5e96e698ee933d61a7c32a5a9b678" }
+
+[lib]
+test = false
+doctest = false
+bench = false
+
+[[bin]]
+name = "jolt-fib-guest"
+path = "src/main.rs"
+test = false
+bench = false
