@@ -26,10 +26,10 @@
 <line x1="520.0" y1="86" x2="520.0" y2="228" stroke="#e1e0d9" stroke-width="1"/>
 <text x="520.0" y="244" font-size="11" text-anchor="middle" fill="#898781">100 s</text>
 <line x1="190" y1="86" x2="190" y2="228" stroke="#c3c2b7" stroke-width="1"/>
-<path d="M190,99.0 h195.7 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-195.7 z" fill="#2a78d6"/>
-<text x="395.7" y="113.0" font-size="12" fill="#0b0b0b">1.06 s</text>
-<path d="M190,133.0 h56.9 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-56.9 z" fill="#2a78d6"/>
-<text x="256.9" y="147.0" font-size="12" fill="#0b0b0b">8.36 ms</text>
+<path d="M190,99.0 h198.9 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-198.9 z" fill="#2a78d6"/>
+<text x="398.9" y="113.0" font-size="12" fill="#0b0b0b">1.19 s</text>
+<path d="M190,133.0 h61.9 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-61.9 z" fill="#2a78d6"/>
+<text x="261.9" y="147.0" font-size="12" fill="#0b0b0b">9.98 ms</text>
 <path d="M190,167.0 h300.2 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-300.2 z" fill="#eb6834"/>
 <text x="500.2" y="181.0" font-size="12" fill="#0b0b0b">40.7 s</text>
 <path d="M190,201.0 h306.4 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-306.4 z" fill="#1baf7a"/>
@@ -49,8 +49,8 @@
 <line x1="940.0" y1="86" x2="940.0" y2="228" stroke="#e1e0d9" stroke-width="1"/>
 <text x="940.0" y="244" font-size="11" text-anchor="middle" fill="#898781">100 GB</text>
 <line x1="610" y1="86" x2="610" y2="228" stroke="#c3c2b7" stroke-width="1"/>
-<path d="M610,99.0 h62.0 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-62.0 z" fill="#2a78d6"/>
-<text x="682.0" y="113.0" font-size="12" fill="#0b0b0b">&lt; 10 MB</text>
+<path d="M610,99.0 h148.6 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-148.6 z" fill="#2a78d6"/>
+<text x="768.6" y="113.0" font-size="12" fill="#0b0b0b">~205 MB</text>
 <path d="M610,133.0 h62.0 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-62.0 z" fill="#2a78d6"/>
 <text x="682.0" y="147.0" font-size="12" fill="#0b0b0b">&lt; 10 MB</text>
 <path d="M610,167.0 h217.9 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-217.9 z" fill="#eb6834"/>

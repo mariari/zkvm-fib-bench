@@ -1,20 +1,6 @@
 # zkvm-fib-bench
 
-A tiny, reproducible **fib(N) benchmark for RISC Zero and SP1** on current releases,
-that reports **prove *and* verify** time (plus proof size and guest cycles).
-
-Both zkVMs run the **identical** program — the exact one behind
-[zkbenchmarks.com](https://zkbenchmarks.com) (source:
-[yetanotherco/zkvm_benchmarks](https://github.com/yetanotherco/zkvm_benchmarks)):
-
-```rust
-let (mut a, mut b) = (0u32, 1u32);
-for _ in 0..n { let mut c = a + b; c %= 7919; a = b; b = c; }  // fib(n) mod 7919
-commit(n); commit(a); commit(b);
-```
-
-The public site records only one end-to-end *prove* time; this harness additionally
-times **verify** separately. Versions: **RISC Zero 3.0.5**, **SP1 6.3.1**.
+We benchmark simple functions written in various ZK programming systems
 
 ## Prerequisites
 
@@ -32,7 +18,26 @@ curl -L https://sp1up.succinct.xyz | bash && sp1up
 # guest build on very new host toolchains (see note below).
 ```
 
-## Run
+## Fib
+
+A tiny, reproducible **fib(N) benchmark for RISC Zero and SP1** on current releases,
+that reports **prove *and* verify** time (plus proof size and guest cycles).
+
+Both zkVMs run the **identical** program, the one behind
+[zkbenchmarks.com](https://zkbenchmarks.com) (source:
+[yetanotherco/zkvm_benchmarks](https://github.com/yetanotherco/zkvm_benchmarks)):
+
+```rust
+let (mut a, mut b) = (0u32, 1u32);
+for _ in 0..n { let mut c = a + b; c %= 7919; a = b; b = c; }  // fib(n) mod 7919
+commit(n); commit(a); commit(b);
+```
+
+The public site records only one end-to-end *prove* time; this harness additionally
+times **verify** separately. Versions: **RISC Zero 3.0.5**, **SP1 6.3.1**.
+
+
+### Run
 
 ```bash
 ./run_fib.sh                 # fib(10000), STARK: risc0 succinct + sp1 compressed
@@ -57,26 +62,69 @@ BENCH sp1   mode=compressed n=10000 prove_s=53.328 verify_ms=34.962 proof_bytes=
 Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 | plonk`.
 Append a guest-algorithm suffix to any mode:
 
-| suffix | guest | journal |
-|---|---|---|
-| *(none)* | linear recurrence, n iterations | `(n, F(n) mod 7919, F(n+1) mod 7919)` |
-| `+fastdbl` | fast doubling, ~log2(n) iterations | identical to linear — directly comparable |
-| `+bounds` | assert `10 <= x <= 100`, no recurrence | `(x)` |
+| suffix     | guest                                  | journal                                    |
+|------------|----------------------------------------|--------------------------------------------|
+| *(none)*   | linear recurrence, n iterations        | `(n, F(n) mod 7919, F(n+1) mod 7919)`      |
+| `+fastdbl` | fast doubling, ~log2(n) iterations     | identical to linear — directly comparable |
+| `+bounds`  | assert `10 <= x <= 100`, no recurrence | `(x)`                                      |
 
 > ⚠️ **Rebuild after changing a guest.** Both scripts build only when the binary is *absent*,
 > so a binary left from an earlier commit is silently benchmarked instead of your current
 > guest. Run `cargo build --release` in `risc0/` and `sp1/script/` explicitly after any guest
 > change.
 
+## Sudoku benchmark
+
+A second workload proves that a completed **n×n grid is a valid sudoku** (n a
+perfect square, box side b = √n): each of the **3n groups** — n rows, n columns,
+n non-overlapping b×b boxes — is a permutation of {1,…,n}. Each group is checked
+the **direct, idiomatic** way you would in plain Rust: walk its n cells with a
+`seen` array, asserting every value is in `1..=n` and appears exactly once.
+Plain integer/boolean ops — no modular arithmetic, no overflow concerns. The host
+generates a known-valid grid of the requested size and commits `(n, grid)`, so the
+proof attests "this public n×n grid is a valid sudoku".
+
+This is the fair, apples-to-apples framing: each system proves "valid sudoku" in
+its own natural idiom — zkFOL via its power-sums / permutation arithmetisation, the
+zkVMs via this distinctness check (what a zkVM developer would actually write).
+
+Same structure and BENCH line as fib; `n` is the grid size (default 9):
+
+```bash
+./run_sudoku.sh            # 9x9, STARK: risc0 succinct + sp1 compressed
+./run_sudoku.sh 4          # 4x4
+./run_sudoku.sh 16 both    # 16x16, STARK + Groth16 SNARK (needs Docker)
+```
+
+Direct binary calls mirror fib (first arg is `n`, second the prover mode):
+
+```bash
+risc0/target/release/sudoku 9 succinct
+sp1/script/target/release/sudoku 9 compressed
+```
+
+Headline at 9×9 (CPU, AMD Ryzen 7 5700X): zkFOL **15.95 ms** / 3.38 ms verify / ~25 MB,
+against RISC Zero composite 7.25 s / 606 MB, RISC Zero succinct 18.04 s / 1.43 GB, SP1 core
+13.69 s / 9.57 GB, SP1 compressed 50.33 s / 16.80 GB.
+
+Note the two sides prove **different statements**: the guests `commit(&grid)`, so the grid
+is public, while zkFOL reports `public_cols: 0` — nothing of the grid is revealed. zkFOL can
+also *solve* the 9×9 from its seventeen clues (~160 ms), which neither guest can express at
+all: both only check a grid they are handed. At 16×16 zkFOL is 65.42 ms against RISC Zero composite 14.73 s and SP1 compressed 50.17 s.
+Across 4×4, 9×9 and 16×16 the guest cycles rise 6.9× while SP1 compressed moves under 1.4%
+(49.5 → 50.2 s), and zkFOL is the only column that responds to the puzzle at all, rising 4.1×
+from 9×9 to 16×16: the zkVM cost tracks its cycle pad, not the puzzle. Full tables in [`RESULTS.md`](RESULTS.md#4-sudoku-a-completed-grid-is-valid).
+
 ## Layout
 
-| Path | What |
-|---|---|
-| `risc0/` | RISC Zero project (guest `methods/guest`, timing host `host/src/main.rs`) — pinned to `risc0-zkvm = 3.0.5` |
-| `sp1/`   | SP1 project (`program/` guest, `script/` timing host) — pinned to `sp1 = 6.3.1` (standalone; no monorepo needed) |
-| `run_fib.sh` | one-shot builder/runner |
-| `bench_all.sh` | full (system, mode, n) sweep: 3 reps, median, peak RSS per cell |
-| `RESULTS.md` | measured numbers + analysis (incl. why this is/isn't a fair comparison vs a specialized prover) |
+| Path            | What                                                            |
+|-----------------|-----------------------------------------------------------------|
+| `risc0/`        | RISC Zero project                                               |
+| `sp1/`          | SP1 project                                                     |
+| `run_fib.sh`    | one-shot fib builder/runner                                     |
+| `run_sudoku.sh` | one-shot sudoku builder/runner                                  |
+| `bench_all.sh`  | full (system, mode, n) sweep: 3 reps, median, peak RSS per cell |
+| `RESULTS.md`    | measured numbers + analysis                                     |
 
 ## Note: RISC Zero guest builds in Docker
 
@@ -91,30 +139,17 @@ FFI both shell out to it.
 
 ## Results
 
-See [`RESULTS.md`](RESULTS.md): three claims, each proved on zkFOL, RISC Zero and SP1 on
-one CPU, with the source each side wrote and the figures. Headline, fib(10,000) mod
-7919 by fast doubling on every system (AMD Ryzen 7 5700X):
-
-|               |   zkFOL | RISC Zero composite | RISC Zero succinct | SP1 core | SP1 compressed |
-|---------------|--------:|--------------------:|-------------------:|---------:|---------------:|
-| prove         | 4.82 ms |              3.69 s |            14.73 s |  13.32 s |        49.24 s |
-| verify        |  1.4 ms |             11.8 ms |            12.4 ms |  74.3 ms |        32.9 ms |
-| proof         | 49.8 KB |            209.6 KB |           223.3 KB |  2.78 MB |        1.27 MB |
-| prover memory | < 10 MB |              312 MB |            1.39 GB |  9.39 GB |       17.00 GB |
-
-> zkVM prove times are hardware- and contention-sensitive (risc0 scales with cores;
-> risc0 fib(1000) measured 33 s contended vs 18 s uncontended on the same box). Quote the
-> exact CPU and "uncontended". Note SP1 compressed peaks near 17 GB RSS — on a box without
-> swap, exceeding RAM is an OOM kill rather than a slowdown, so run cells serially.
+See [`RESULTS.md`](RESULTS.md)
 
 ## Credits
 
 This is an independent, minimal harness — **not a fork**. The reused pieces are all
 permissively licensed:
 
-- The `fib(n) mod 7919` program and the choice of N values follow the **zkbenchmarks.com**
-  harness by Yet Another Company —
-  [yetanotherco/zkvm_benchmarks](https://github.com/yetanotherco/zkvm_benchmarks) (MIT).
+- The `fib(n) mod 7919` program and the choice of N values follow the
+  **zkbenchmarks.com** harness by Yet Another Company
+  [yetanotherco/zkvm_benchmarks](https://github.com/yetanotherco/zkvm_benchmarks)
+  (MIT).
 - Per-VM project scaffolds come from [SP1](https://github.com/succinctlabs/sp1)
   (Succinct Labs, MIT/Apache-2.0) and [RISC Zero](https://github.com/risc0/risc0)
   (MIT/Apache-2.0).
