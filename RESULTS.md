@@ -217,6 +217,7 @@ end
 | [zkFOL `regsm`](zkfol/definitions.ex#L42-L48)                 | fib(10,000) mod 7919, linear |  1.19 s | 34.1 ms | 922.8 KB |       ~205 MB |
 | [zkFOL `fib`, doubled](zkfol/definitions.ex#L9-L17)           | exact fib(10,000), doubling  | 9.98 ms |  3.9 ms | 502.8 KB |       < 10 MB |
 | [RISC Zero succinct](risc0/methods/guest/src/main.rs#L16-L26) | fib(10,000) mod 7919, linear | 40.67 s | 12.5 ms | 223.3 KB |       2.30 GB |
+| [Jolt](jolt/guest/src/lib.rs#L6-L18)                         | fib(10,000) mod 7919, linear |  2.879 s | 74.4 ms |  80.3 KB |              — |
 | [SP1 compressed](sp1/program/src/main.rs#L14-L24)             | fib(10,000) mod 7919, linear | 50.39 s | 35.2 ms |  1.27 MB |      17.07 GB |
 
 Read the loss column too: on `regsm` zkFOL's verify (34 ms) and proof (923 KB) grow with
@@ -349,11 +350,16 @@ character-identical apart from entrypoint boilerplate and their read/commit call
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 9×9   |  18.040 s | 12.44 ms | 223.9 KB |       1.43 GB |    65,536 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 9×9   |  13.687 s | 75.92 ms |  2.78 MB |       9.57 GB |    77,067 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 9×9   |  50.329 s | 33.21 ms |  1.27 MB |      16.80 GB |    77,067 |
+| [Jolt](jolt/guest/src/lib.rs#L20-L60)                         | 9×9   |   0.803 s | 67.26 ms |  72.4 KB |              — |    16,384 |
 | **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 16×16 | **65.42 ms** | **3.54 ms** | 583.7 KB |      **~28 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 16×16 |  14.725 s | 13.23 ms | 246.3 KB |       1.16 GB |   131,072 |
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 16×16 |  25.667 s | 12.67 ms | 225.3 KB |       1.40 GB |   131,072 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 16×16 |  14.470 s | 77.45 ms |  2.78 MB |       9.72 GB |   188,519 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 16×16 |  50.169 s | 32.67 ms |  1.27 MB |      16.68 GB |   188,519 |
+
+Jolt's row is the same public-grid claim, measured with a fixed 9×9 guest. Its public
+input contains the same 81 cells, but uses fixed arrays because this Jolt revision does not
+serialize arbitrary-length vectors in provable function arguments.
 
 **The two zkFOL rows are not the same relation.** The 9×9 row is sudoku proper: the clues,
 the three distinctness families, and the `between(1, n)` range checks. The 16×16 row carries
