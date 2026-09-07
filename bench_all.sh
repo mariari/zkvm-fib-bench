@@ -5,7 +5,7 @@
 # Runs every cell SEQUENTIALLY (never two provers at once -- the compressed/
 # recursion modes peak at ~17 GB RSS) and prints one summary line per cell:
 #
-#   CELL system=<risc0|sp1> mode=<...> n=<...> prove_s=<...> verify_ms=<...> \
+#   CELL system=<risc0|sp1|jolt> mode=<...> n=<...> prove_s=<...> verify_ms=<...> \
 #        proof_bytes=<...> peak_rss_kb=<...> cycles=<...>
 #
 # Peak RSS comes from /usr/bin/time -v when GNU time is installed, and otherwise
@@ -48,6 +48,8 @@ export SP1_PROVER=cpu
 
 RISC0_BIN="$ROOT/risc0/target/release/host"
 SP1_BIN="$ROOT/sp1/script/target/release/fibonacci-script"
+JOLT_BIN="$ROOT/jolt/target/release/jolt-fib-host"
+JOLT_CLI="$ROOT/jolt/.toolchain/bin/jolt"
 
 # Host rustc must be >= 1.90 for the risc0 host crates; pick a toolchain that is.
 CARGO_TC=""
@@ -58,6 +60,8 @@ fi
 [[ -x "$RISC0_BIN" ]] || ( cd "$ROOT/risc0" && cargo $CARGO_TC build --release )
 [[ -x "$SP1_BIN"   ]] || ( cd "$ROOT/sp1/script" && \
                            RUSTFLAGS="-C target-cpu=native" cargo $CARGO_TC build --release )
+[[ -x "$JOLT_BIN" && -x "$JOLT_CLI" ]] || ( cd "$ROOT/jolt" && ./build.sh )
+export JOLT_PATH="$JOLT_CLI"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -86,11 +90,16 @@ cell() {
     case "$sys" in
         risc0) dir="$ROOT/risc0";      bin="$RISC0_BIN" ;;
         sp1)   dir="$ROOT/sp1/script"; bin="$SP1_BIN"   ;;
+        jolt)  dir="$ROOT/jolt";      bin="$JOLT_BIN"  ;;
     esac
     : > "$TMP/p" ; : > "$TMP/v" ; : > "$TMP/r"
     local bytes="?" cycles="?" out
     for _ in $(seq 1 "$REPS"); do
-        out="$( cd "$dir" && measure timeout "$to" "$bin" "$n" "$mode" )"
+        if [[ "$sys" == jolt ]]; then
+            out="$( cd "$dir" && measure timeout "$to" "$bin" "$n" )"
+        else
+            out="$( cd "$dir" && measure timeout "$to" "$bin" "$n" "$mode" )"
+        fi
         if ! grep -q '^BENCH' <<<"$out"; then
             echo "CELL system=$sys mode=$mode n=$n FAILED: $(grep -m1 -iE 'panic|error|docker' <<<"$out")"
             return
@@ -119,6 +128,8 @@ cell sp1   core       1000   1200
 cell sp1   core       10000  1200
 cell sp1   compressed 1000   1800
 cell sp1   compressed 10000  1800
+cell jolt  stark      1000    1200
+cell jolt  stark      10000   1800
 
 # Fast-doubling guest: same journal (n, F(n) mod 7919, F(n+1) mod 7919), ~log2(n)
 # iterations instead of n. This is the best-vs-best row against a log-depth prover.
@@ -127,6 +138,7 @@ cell risc0 succinct+fastdbl   10000  1200
 cell sp1   core+fastdbl       1000   1200
 cell sp1   core+fastdbl       10000  1200
 cell sp1   compressed+fastdbl 10000  1800
+cell jolt  stark      10000   1200
 
 # Bounds check: enforce 10 <= x <= 100 and commit x. Not a fib claim at all --
 # this is the floor workload, the smallest thing worth proving. The n column is
