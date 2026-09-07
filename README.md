@@ -20,10 +20,10 @@ curl -L https://sp1up.succinct.xyz | bash && sp1up
 
 ## Fib
 
-A tiny, reproducible **fib(N) benchmark for RISC Zero and SP1** on current releases,
-that reports **prove *and* verify** time (plus proof size and guest cycles).
+A tiny, reproducible **fib(N) benchmark for RISC Zero, SP1, and Jolt** that reports
+**prove *and* verify** time (plus proof size and guest cycles).
 
-Both zkVMs run the **identical** program, the one behind
+All three zkVMs run the **identical** program, the one behind
 [zkbenchmarks.com](https://zkbenchmarks.com) (source:
 [yetanotherco/zkvm_benchmarks](https://github.com/yetanotherco/zkvm_benchmarks)):
 
@@ -33,15 +33,15 @@ for _ in 0..n { let mut c = a + b; c %= 7919; a = b; b = c; }  // fib(n) mod 791
 commit(n); commit(a); commit(b);
 ```
 
-The public site records only one end-to-end *prove* time; this harness additionally
-times **verify** separately. Versions: **RISC Zero 3.0.5**, **SP1 6.3.1**.
+The public site records only one end-to-end *prove* time; this harness additionally times
+**verify** separately. Versions: **RISC Zero 3.0.5**, **SP1 6.3.1**, and Jolt pinned by Git revision.
 
 
 ### Run
 
 ```bash
-./run_fib.sh                 # fib(10000), STARK: risc0 succinct + sp1 compressed
-./run_fib.sh 10000 snark     # Groth16 SNARK for both (needs Docker running)
+./run_fib.sh                 # fib(10000), STARK: RISC Zero + SP1 + Jolt
+./run_fib.sh 10000 snark     # Groth16 for RISC Zero and SP1 (needs Docker)
 ./run_fib.sh 100000 both     # STARK + SNARK at N=100000
 
 ./bench_all.sh               # full (system, mode, n) sweep, 3 reps, median + peak RSS
@@ -54,12 +54,13 @@ WRAP=1 ./bench_all.sh        # additionally run the groth16 cells (needs Docker)
 ```
 BENCH risc0 mode=succinct   n=10000 prove_s=42.634 verify_ms=12.280 proof_bytes=223250 ...
 BENCH sp1   mode=compressed n=10000 prove_s=53.328 verify_ms=34.962 proof_bytes=1272581 ...
+BENCH jolt  mode=stark      n=10000 prove_s=...     verify_ms=...     proof_bytes=... cycles=...
 ```
 
 `bench_all.sh` runs every cell sequentially (never two provers at once — compressed peaks at
 ~17 GB) and prints one `CELL …` line per cell, adding `peak_rss_kb`.
 
-Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 | plonk`.
+Modes: risc0 `succinct | composite | groth16`; SP1 `core | compressed | groth16 | plonk`; Jolt `stark`.
 Append a guest-algorithm suffix to any mode:
 
 | suffix     | guest                                  | journal                                    |
@@ -68,10 +69,9 @@ Append a guest-algorithm suffix to any mode:
 | `+fastdbl` | fast doubling, ~log2(n) iterations     | identical to linear — directly comparable |
 | `+bounds`  | assert `10 <= x <= 100`, no recurrence | `(x)`                                      |
 
-> ⚠️ **Rebuild after changing a guest.** Both scripts build only when the binary is *absent*,
+> ⚠️ **Rebuild after changing a guest.** The scripts build only when the binary is absent,
 > so a binary left from an earlier commit is silently benchmarked instead of your current
-> guest. Run `cargo build --release` in `risc0/` and `sp1/script/` explicitly after any guest
-> change.
+> guest. Run `./jolt/build.sh` after changing the Jolt guest.
 
 ## Sudoku benchmark
 
@@ -121,6 +121,7 @@ from 9×9 to 16×16: the zkVM cost tracks its cycle pad, not the puzzle. Full ta
 |-----------------|-----------------------------------------------------------------|
 | `risc0/`        | RISC Zero project                                               |
 | `sp1/`          | SP1 project                                                     |
+| `jolt/`        | Jolt workspace, guest, host, and pinned CLI bootstrap             |
 | `run_fib.sh`    | one-shot fib builder/runner                                     |
 | `run_sudoku.sh` | one-shot sudoku builder/runner                                  |
 | `bench_all.sh`  | full (system, mode, n) sweep: 3 reps, median, peak RSS per cell |

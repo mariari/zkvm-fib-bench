@@ -1,0 +1,9 @@
+[workspace]
+members = ["host", "guest"]
+resolver = "2"
+
+[patch.crates-io]
+ark-bn254 = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
+ark-ff = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
+ark-ec = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
+ark-serialize = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
