@@ -92,8 +92,8 @@ Same structure and BENCH line as fib; `n` is the grid size (default 9):
 
 ```bash
 ./run_sudoku.sh            # 9x9, STARK: RISC Zero + SP1 + Jolt
-./run_sudoku.sh 4          # 4x4, RISC Zero + SP1
-./run_sudoku.sh 16 both    # 16x16, RISC Zero + SP1 (needs Docker)
+./run_sudoku.sh 4          # 4x4, RISC Zero + SP1 + Jolt
+./run_sudoku.sh 16 both    # 16x16, RISC Zero + SP1 + Jolt (needs Docker)
 ```
 
 Direct binary calls mirror fib (first arg is `n`, second the prover mode):
@@ -115,9 +115,9 @@ all: both only check a grid they are handed. At 16×16 zkFOL is 65.42 ms against
 Across 4×4, 9×9 and 16×16 the guest cycles rise 6.9× while SP1 compressed moves under 1.4%
 (49.5 → 50.2 s), and zkFOL is the only column that responds to the puzzle at all, rising 4.1×
 from 9×9 to 16×16: the zkVM cost tracks its cycle pad, not the puzzle. Full tables in [`RESULTS.md`](RESULTS.md#4-sudoku-a-completed-grid-is-valid).
-The first Jolt Sudoku guest is deliberately fixed at 9×9 so its public input shape is
-identical in size to the existing 9×9 zkVM case. It uses fixed arrays because this Jolt
-revision does not serialize arbitrary-length vectors in guest function arguments.
+Jolt uses separate exact-size guests for 4×4, 9×9, and 16×16. This keeps each public
+input shape identical to the corresponding RISC Zero and SP1 benchmark without padding
+or dynamic guest serialization.
 
 ## Layout
 

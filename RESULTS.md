@@ -345,21 +345,23 @@ character-identical apart from entrypoint boilerplate and their read/commit call
 
 | system                                                   | grid  |     prove |   verify |    proof | prover memory |    cycles |
 |-----------------------------------------------------------|-------|----------:|---------:|---------:|--------------:|----------:|
+| [Jolt](jolt/guest/src/lib.rs#L58-L63)                         | 4×4   |   0.714 s | 90.88 ms |  68.1 KB |              — |     4,096 |
 | **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 9×9   | **15.95 ms** | **3.38 ms** | 332.3 KB |      **~25 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 9×9   |   7.252 s | 12.46 ms | 221.9 KB |        606 MB |    65,536 |
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 9×9   |  18.040 s | 12.44 ms | 223.9 KB |       1.43 GB |    65,536 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 9×9   |  13.687 s | 75.92 ms |  2.78 MB |       9.57 GB |    77,067 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 9×9   |  50.329 s | 33.21 ms |  1.27 MB |      16.80 GB |    77,067 |
 | [Jolt](jolt/guest/src/lib.rs#L20-L60)                         | 9×9   |   0.803 s | 67.26 ms |  72.4 KB |              — |    16,384 |
+| **[Jolt](jolt/guest/src/lib.rs#L71-L75)**                       | 16×16 |   1.057 s | 80.42 ms |  75.8 KB |              — |    32,768 |
 | **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 16×16 | **65.42 ms** | **3.54 ms** | 583.7 KB |      **~28 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 16×16 |  14.725 s | 13.23 ms | 246.3 KB |       1.16 GB |   131,072 |
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 16×16 |  25.667 s | 12.67 ms | 225.3 KB |       1.40 GB |   131,072 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 16×16 |  14.470 s | 77.45 ms |  2.78 MB |       9.72 GB |   188,519 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 16×16 |  50.169 s | 32.67 ms |  1.27 MB |      16.68 GB |   188,519 |
 
-Jolt's row is the same public-grid claim, measured with a fixed 9×9 guest. Its public
-input contains the same 81 cells, but uses fixed arrays because this Jolt revision does not
-serialize arbitrary-length vectors in provable function arguments.
+Jolt's rows use separate exact-size guests for 4×4, 9×9, and 16×16. Each public input
+contains the same number of cells as the corresponding RISC Zero and SP1 row, without
+padding or dynamic guest serialization. Jolt prover memory was not recorded for these runs.
 
 **The two zkFOL rows are not the same relation.** The 9×9 row is sudoku proper: the clues,
 the three distinctness families, and the `between(1, n)` range checks. The 16×16 row carries
