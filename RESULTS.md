@@ -351,7 +351,7 @@ character-identical apart from entrypoint boilerplate and their read/commit call
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 9×9   |  18.040 s | 12.44 ms | 223.9 KB |       1.43 GB |    65,536 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 9×9   |  13.687 s | 75.92 ms |  2.78 MB |       9.57 GB |    77,067 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 9×9   |  50.329 s | 33.21 ms |  1.27 MB |      16.80 GB |    77,067 |
-| [Jolt](jolt/guest/src/lib.rs#L20-L60)                         | 9×9   |   0.803 s | 67.26 ms |  72.4 KB |              — |    16,384 |
+| [Jolt](jolt/guest/src/lib.rs#L65-L69)                         | 9×9   |   0.878 s | 84.85 ms |  72.4 KB |              — |    16,384 |
 | **[Jolt](jolt/guest/src/lib.rs#L71-L75)**                       | 16×16 |   1.057 s | 80.42 ms |  75.8 KB |              — |    32,768 |
 | **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 16×16 | **65.42 ms** | **3.54 ms** | 583.7 KB |      **~28 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 16×16 |  14.725 s | 13.23 ms | 246.3 KB |       1.16 GB |   131,072 |
