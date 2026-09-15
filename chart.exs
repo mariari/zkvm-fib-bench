@@ -8,7 +8,7 @@
 # (system, mode). The numbers are the same-rig medians recorded in RESULTS.md; edit the
 # tables there, mirror the change here, rerun.
 defmodule Chart do
-  @system [{"zkFOL", "#2a78d6"}, {"RISC Zero", "#eb6834"}, {"SP1", "#1baf7a"}]
+  @system [{"zkFOL", "#2a78d6"}, {"RISC Zero", "#eb6834"}, {"SP1", "#1baf7a"}, {"Jolt", "#8b5cf6"}]
   @ink "#0b0b0b"
   @ink2 "#52514e"
   @muted "#898781"
@@ -39,7 +39,8 @@ defmodule Chart do
     {"zkFOL", "regsm", 1187, 205, "~205 MB"},
     {"zkFOL", "fib, doubled", 9.98, 10, "&lt; 10 MB"},
     {"RISC Zero", "succinct", 40670, 2300},
-    {"SP1", "compressed", 50390, 17070}
+    {"SP1", "compressed", 50390, 17070},
+    {"Jolt", "stark", 2377, 351}
   ]
   @bounds [
     {"zkFOL", "bounded", 1.53, 3, "~3 MB"},
@@ -54,11 +55,13 @@ defmodule Chart do
     {"RISC Zero", "succinct, 9x9", 18040, 1426},
     {"SP1", "core, 9x9", 13687, 9798},
     {"SP1", "compressed, 9x9", 50329, 17208},
+    {"Jolt", "stark, 9x9", 601, 248},
     {"zkFOL", "16x16", 65.42, 28, "~28 MB"},
     {"RISC Zero", "composite, 16x16", 14725, 1191},
     {"RISC Zero", "succinct, 16x16", 25667, 1429},
     {"SP1", "core, 16x16", 14470, 9949},
-    {"SP1", "compressed, 16x16", 50169, 17077}
+    {"SP1", "compressed, 16x16", 50169, 17077},
+    {"Jolt", "stark, 16x16", 843, 436}
   ]
 
   def main do
@@ -86,7 +89,7 @@ defmodule Chart do
     figure(
       @sudoku,
       "sudoku: a completed grid is valid, 9×9 and 16×16",
-      "zkVMs walk each group with a seen array and commit the grid; zkFOL proves the clues with nothing of it public; only the zkFOL bars move with the grid; CPU only, AMD Ryzen 7 5700X; zkFOL medians of 3, zkVM single runs",
+      "zkVMs commit the grid and walk each group with a seen array; zkFOL proves the clues, nothing public; CPU only; zkFOL and Jolt medians of 3, others single runs",
       "prove_sudoku.svg"
     )
   end
@@ -94,8 +97,11 @@ defmodule Chart do
   defp figure(rows, title, subtitle, path) do
     h = @top + @row * length(rows) + 48
 
+    present = rows |> Enum.map(&elem(&1, 0)) |> Enum.uniq()
+
     legend =
       @system
+      |> Enum.filter(fn {name, _} -> name in present end)
       |> Enum.reverse()
       |> Enum.reduce({@w - 16, []}, fn {name, color}, {lx, acc} ->
         lx = lx - 8 - 7 * String.length(name)
