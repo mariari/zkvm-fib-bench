@@ -20,3 +20,7 @@ sp1-build = "6.3.1"
 [[bin]]
 name = "fibonacci-script"
 path = "src/main.rs"
+
+[[bin]]
+name = "sudoku"
+path = "src/bin/sudoku.rs"
