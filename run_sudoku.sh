@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Reproduce the sudoku-validity prove/verify numbers locally on RISC Zero 3.0.5
-# and SP1 6.3.1. Companion to run_fib.sh, same shape.
+# Reproduce the sudoku-validity prove/verify numbers locally on RISC Zero, SP1,
+# and Jolt for the 4x4, 9x9, and 16x16 benchmark sizes.
 #
-# Both zkVMs run the IDENTICAL program: prove that a completed n x n grid (n a
-# perfect square, box side b = sqrt(n)) is a valid sudoku, i.e. each of the 3n
-# groups -- n rows, n columns, n b x b boxes -- is a permutation of {1,...,n}.
+# All systems run the same public-grid claim: prove that a completed n x n grid
+# is a valid sudoku, i.e. each of the 3n groups -- n rows, n columns, and n b x b
+# boxes -- is a permutation of {1,...,n}.
 # The check is by power sums: for k = 1..n,
 #     sum_{cell in group} cell^k  ==  sum_{v=1}^{n} v^k
 # which pins each group's multiset to exactly {1..n} (distinctness AND range in
@@ -17,9 +17,9 @@
 #
 # Usage:
 #   ./run_sudoku.sh [N] [stark|snark|both]
-#   ./run_sudoku.sh                  # 9x9, STARK  (no Docker needed)
+#   ./run_sudoku.sh                  # 9x9, STARK (no Docker needed)
 #   ./run_sudoku.sh 4                # 4x4, STARK
-#   ./run_sudoku.sh 16 snark         # 16x16, Groth16 SNARK for both (needs Docker)
+#   ./run_sudoku.sh 16 snark         # 16x16, Groth16 for RISC Zero/SP1 (Docker)
 #
 set -euo pipefail
 
@@ -32,6 +32,8 @@ export SP1_PROVER=cpu
 
 RISC0_BIN="$ROOT/risc0/target/release/sudoku"
 SP1_BIN="$ROOT/sp1/script/target/release/sudoku"
+JOLT_BIN="$ROOT/jolt/target/release/sudoku"
+JOLT_CLI="$ROOT/jolt/.toolchain/bin/jolt"
 
 # --- build on demand ---
 if [[ ! -x "$RISC0_BIN" ]]; then
@@ -42,16 +44,24 @@ if [[ ! -x "$SP1_BIN" ]]; then
     echo ">> building SP1 (target-cpu=native for AVX2/512) ..."
     ( cd "$ROOT/sp1/script" && RUSTFLAGS="-C target-cpu=native" cargo build --release )
 fi
+if [[ "$N" == 4 || "$N" == 9 || "$N" == 16 ]] && [[ ! -x "$JOLT_BIN" || ! -x "$JOLT_CLI" ]]; then
+    echo ">> building Jolt ..."
+    ( cd "$ROOT/jolt" && ./build.sh )
+fi
 
 risc0() { ( cd "$ROOT/risc0"     && ./target/release/sudoku "$N" "$1" ); }
 sp1()   { ( cd "$ROOT/sp1/script" && ./target/release/sudoku "$N" "$1" ); }
+jolt()  { ( cd "$ROOT/jolt" && JOLT_PATH="$JOLT_CLI" ./target/release/sudoku "$N" ); }
 
 echo "=========================================================="
-echo " sudoku(${N}x${N})  |  RISC Zero 3.0.5  vs  SP1 6.3.1  |  CPU"
+echo " sudoku(${N}x${N})  |  RISC Zero 3.0.5  vs  SP1 6.3.1  vs  Jolt  |  CPU"
 echo "=========================================================="
 case "$PHASE" in
-    stark) risc0 succinct; sp1 compressed ;;
-    snark) echo "(Groth16 needs Docker running)"; risc0 groth16; sp1 groth16 ;;
-    both)  risc0 succinct; sp1 compressed; echo "--- SNARK (Docker) ---"; risc0 groth16; sp1 groth16 ;;
+    stark)
+        risc0 succinct; sp1 compressed
+        [[ "$N" == 4 || "$N" == 9 || "$N" == 16 ]] && jolt
+        ;;
+    snark) echo "(Groth16 needs Docker; Jolt has no SNARK mode)"; risc0 groth16; sp1 groth16 ;;
+    both)  risc0 succinct; sp1 compressed; [[ "$N" == 4 || "$N" == 9 || "$N" == 16 ]] && jolt; echo "--- SNARK (Docker) ---"; risc0 groth16; sp1 groth16 ;;
     *)     echo "usage: ./run_sudoku.sh <N> [stark|snark|both]"; exit 1 ;;
 esac

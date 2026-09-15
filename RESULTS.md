@@ -1,6 +1,6 @@
-# Benchmarks: zkFOL vs RISC0 vs SP1
+# Benchmarks: zkFOL vs RISC0 vs SP1 vs Jolt
 
-We benchmark the same computations on zkFOL, RISC Zero and SP1:
+We benchmark the same computations on zkFOL, RISC Zero, SP1 and Jolt:
 
 1. **fib(10,000) mod 7919.** Fibonacci run to 10,000, the exact same algorithm on every
    system.
@@ -13,8 +13,10 @@ Each section shows the code each side wrote, complete with imports, then its num
 zkFOL definitions the benchmark ran are collected in [`zkfol/definitions.ex`](zkfol/definitions.ex).
 
 **Machine:** AMD Ryzen 7 5700X (8c/16t), Linux, CPU proving only, one prover at a time.
-**Versions:** zkFOL 0.4.0 (zinc-plus `66776a3`; §2 on `7cf72c4`), RISC Zero 3.0.5, SP1 6.3.1.
-Measured September 2026.
+**Versions:** zkFOL 0.4.0 (zinc-plus `66776a3`; §2 on `7cf72c4`), RISC Zero 3.0.5, SP1 6.3.1,
+Jolt `aec34d1` (2026-09-02). Measured September 2026. Jolt has rows in §3 and §4 only: its guests
+are the linear fib loop and the three exact-size sudoku checks, so it has no fast-doubling or
+bounds-check cell.
 
 ## Glossary
 
@@ -29,6 +31,9 @@ Measured September 2026.
   segment; succinct recursively folds those into one constant-size STARK.
 - **SP1 core / compressed.** The same pair for SP1: core is the raw shard proofs,
   compressed recursively folds them into one.
+- **Jolt.** A lookup-argument zkVM (sumcheck over the RISC-V trace) with one proof mode,
+  which the tables call `stark`. There is no recursive wrap, so no succinct/compressed
+  pair. Its `cycles` column is the trace length, padded to a power of two.
 
 ## 1. fib(10,000) mod 7919
 
@@ -218,6 +223,12 @@ end
 | [zkFOL `fib`, doubled](zkfol/definitions.ex#L9-L17)           | exact fib(10,000), doubling  | 9.98 ms |  3.9 ms | 502.8 KB |       < 10 MB |
 | [RISC Zero succinct](risc0/methods/guest/src/main.rs#L16-L26) | fib(10,000) mod 7919, linear | 40.67 s | 12.5 ms | 223.3 KB |       2.30 GB |
 | [SP1 compressed](sp1/program/src/main.rs#L14-L24)             | fib(10,000) mod 7919, linear | 50.39 s | 35.2 ms |  1.27 MB |      17.07 GB |
+| [Jolt](jolt/guest/src/lib.rs#L6-L18)                          | fib(10,000) mod 7919, linear |  2.38 s | 78.2 ms |  82.2 KB |        351 MB |
+
+Jolt is the zkVM to watch here: 2.38 s and 351 MB, 17× and 21× under RISC Zero succinct
+and SP1 compressed on prove, but its verify (78 ms) is the slowest column in the table and
+it is still 2.0× slower than `regsm` on the like-for-like linear row and 238× slower than
+`fib` doubled. Its trace is 262,144 steps for the 10,000-step loop.
 
 Read the loss column too: on `regsm` zkFOL's verify (34 ms) and proof (923 KB) grow with
 the number of steps, while the zkVM's stay constant. `fib` has neither problem because
@@ -344,16 +355,27 @@ character-identical apart from entrypoint boilerplate and their read/commit call
 
 | system                                                   | grid  |     prove |   verify |    proof | prover memory |    cycles |
 |-----------------------------------------------------------|-------|----------:|---------:|---------:|--------------:|----------:|
+| [Jolt](jolt/guest/src/lib.rs#L58-L63)                        | 4×4   |   0.371 s | 59.84 ms |  69.7 KB |        153 MB |     4,096 |
 | **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 9×9   | **15.95 ms** | **3.38 ms** | 332.3 KB |      **~25 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 9×9   |   7.252 s | 12.46 ms | 221.9 KB |        606 MB |    65,536 |
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 9×9   |  18.040 s | 12.44 ms | 223.9 KB |       1.43 GB |    65,536 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 9×9   |  13.687 s | 75.92 ms |  2.78 MB |       9.57 GB |    77,067 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 9×9   |  50.329 s | 33.21 ms |  1.27 MB |      16.80 GB |    77,067 |
+| [Jolt](jolt/guest/src/lib.rs#L65-L69)                        | 9×9   |   0.601 s | 67.17 ms |  74.1 KB |        248 MB |    16,384 |
 | **[zkFOL](zkfol/definitions.ex#L95-L108)**                | 16×16 | **65.42 ms** | **3.54 ms** | 583.7 KB |      **~28 MB** |         — |
 | [RISC Zero composite](risc0/methods/guest/src/bin/sudoku.rs) | 16×16 |  14.725 s | 13.23 ms | 246.3 KB |       1.16 GB |   131,072 |
 | [RISC Zero succinct](risc0/methods/guest/src/bin/sudoku.rs)  | 16×16 |  25.667 s | 12.67 ms | 225.3 KB |       1.40 GB |   131,072 |
 | [SP1 core](sp1/program/src/bin/sudoku.rs)                | 16×16 |  14.470 s | 77.45 ms |  2.78 MB |       9.72 GB |   188,519 |
 | [SP1 compressed](sp1/program/src/bin/sudoku.rs)          | 16×16 |  50.169 s | 32.67 ms |  1.27 MB |      16.68 GB |   188,519 |
+| [Jolt](jolt/guest/src/lib.rs#L71-L75)                        | 16×16 |   0.843 s | 73.07 ms |  77.7 KB |        436 MB |    32,768 |
+
+Jolt's rows use separate exact-size guests for 4×4, 9×9, and 16×16
+([`sudoku4`, `sudoku9`, `sudoku16`](jolt/guest/src/lib.rs#L59-L75)), each taking the grid
+as a fixed `[[u32; N]; N]` argument. Each public input contains the same number of cells as
+the corresponding RISC Zero and SP1 row, without padding or dynamic guest serialization. The
+guest is the same seen-array walk as the RISC Zero / SP1 one, written over the fixed array
+rather than a `Vec`. The 4×4 row has no RISC Zero / SP1 partner in this table because those
+sit in the pad table below.
 
 **The two zkFOL rows are not the same relation.** The 9×9 row is sudoku proper: the clues,
 the three distinctness families, and the `between(1, n)` range checks. The 16×16 row carries
@@ -362,10 +384,12 @@ relation the branch defines. So the 9×9 → 16×16 step is not a clean scaling 
 the difference is the grid and part is the missing range checks, and the two cannot be
 separated from these rows alone.
 
-Prove at 9×9, zkVM over zkFOL: 455× / 1,130× / 858× / 3,160×. At 16×16:
-225× / 392× / 221× / 767×. Memory: 24× to 670× at 9×9, 41× to 600× at 16×16. zkFOL wins
-verify on both grids (3.38 ms and 3.54 ms against 12.4 to 77.5 ms), which it does not at
-fib(10,000) — the verify win belongs to small claims, so name the size when you quote it.
+Prove at 9×9, zkVM over zkFOL: 455× / 1,130× / 858× / 3,160×, and 38× for Jolt. At 16×16:
+225× / 392× / 221× / 767×, and 13× for Jolt. Memory: 24× to 670× at 9×9, 41× to 600× at
+16×16; Jolt is the low end of both bands at 10× and 16×. zkFOL wins verify on both grids
+(3.38 ms and 3.54 ms against 12.4 to 77.5 ms), which it does not at fib(10,000) — the verify
+win belongs to small claims, so name the size when you quote it. Jolt is the closest zkVM
+on every prove cell in this section; on verify it sits with SP1 core at the slow end.
 
 ### Solving, not only checking
 
@@ -402,9 +426,13 @@ padding to 65,536 cycles, and only doubles at 16×16 when the pad doubles to 131
 | RISC Zero succinct         | 18.130 s | 18.040 s | 25.667 s |
 | SP1 core                   | 13.368 s | 13.687 s | 14.470 s |
 | SP1 compressed             | 49.493 s | 50.329 s | 50.169 s |
+| Jolt                       |  0.371 s |  0.601 s |  0.843 s |
 
 zkFOL is the only column that responds to the puzzle at all: it rises from 9×9 to 16×16
-while SP1 compressed *falls* 0.3% over the same step. Read the zkFOL rise as a direction,
+while SP1 compressed *falls* 0.3% over the same step. Jolt does move, 2.3× from 4×4 to
+16×16, but with its trace length: 4,096 → 16,384 → 32,768, each the next power of two
+above the guest's step count. It pays for the pad like the others, only its pad is
+finer and its per-step cost far lower. Read the zkFOL rise as a direction,
 not a factor — the 16×16 relation drops the range checks, so it understates the true cost of
 the larger grid. That direction is the point: one column pays for the claim, the other for
 the machine.
@@ -441,9 +469,15 @@ order-dependent when rows run back to back in one VM — `regsm` measured 0, 205
   relation the branch defines carries the three distinctness families without
   `between(1, n)`. The 16×16 row therefore understates the grid's cost by whatever the range
   checks would add, and the two effects cannot be separated from these rows alone.
-- **zkVM sudoku cells are single runs**, not medians of 3 like the fib cells. Where both
-  protocols were used on the same cell the two agreed within a few percent, so read the
-  sudoku seconds as ±few-percent. The zkFOL rows in §1, §3 and §4 are medians of 3.
+- **RISC Zero and SP1 sudoku cells are single runs**, not medians of 3 like the fib cells.
+  Where both protocols were used on the same cell the two agreed within a few percent, so
+  read the sudoku seconds as ±few-percent. The zkFOL rows in §1, §3 and §4 and every Jolt
+  row are medians of 3.
+- **Jolt's prove column is the prove call alone.** Guest compilation and the prover
+  preprocessing (about 3 s per run with the guest build cached in `/tmp/jolt-guest-targets`)
+  run before the timer, matching the SP1 setup exclusion. Its peak RSS covers the whole host
+  process, preprocessing included, like the other zkVM columns. Jolt has no recursive wrap,
+  so it has no counterpart to the succinct/compressed rows.
 - **Sudoku is not like for like.** The zkVM guests commit the grid, so it is public;
   zkFOL publishes none of it. Both prove a completed grid the prover holds — the solve in
   §4 is a separate capability, measured separately, and is not in any prove column. Quote
@@ -471,8 +505,11 @@ example in `Examples.EBench`.
 | `fib`, doubled  | [`fib`](zkfol/definitions.ex#L9-L17), the exact integer, rewritten by `Zkfol.Doubling` | `measured_doubled_fibonacci(10_000)`       |
 
 Sudoku cells come from `./run_sudoku.sh <n>` or the binaries directly
-(`risc0/target/release/sudoku <n> <mode>`, `sp1/script/target/release/sudoku <n> <mode>`),
-one run each with peak RSS taken the same way. The zkFOL sudoku row is the front door
+(`risc0/target/release/sudoku <n> <mode>`, `sp1/script/target/release/sudoku <n> <mode>`,
+`JOLT_PATH=jolt/.toolchain/bin/jolt jolt/target/release/sudoku <n>`), one run each for
+RISC Zero and SP1 and three for Jolt, with peak RSS taken the same way. The Jolt fib row is
+`bench_all.sh`'s `jolt stark 10000` cell; `./jolt/build.sh` installs the pinned `jolt` CLI
+and builds both hosts. The zkFOL sudoku row is the front door
 rather than an `EBench` example:
 
 ```elixir
