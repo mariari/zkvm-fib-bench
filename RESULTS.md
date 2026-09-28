@@ -2,15 +2,14 @@
 
 We benchmark the same computations on zkFOL, RISC Zero, SP1 and Jolt:
 
-1. **fib(10,000) mod 7919.** Fibonacci run to 10,000, the exact same algorithm on every
-   system.
-2. **bounds check 10 ≤ x ≤ 100.** Just the cost of constraining the given argument.
-3. **fib(10,000).** What just running Fibonacci looks like for your average use case.
-4. **Sudoku validity.** A claim with no recurrence at all, only structure — and the one
+1. **fib(10,000) mod 7919.** Fibonacci mod 7919 run to 10,000.  A standard benchmark in this space.
+2. **bounds check 10 ≤ x ≤ 100.** Just the cost of constraining (= doing a "range check" on) an argument.
+3. **fib(10,000).** The Fibonacci function on integers, like you learned in school.  zkVM-based approaches typically do /not/ do this because their notion of number is based on finite fields; zkFOL is integer-based, so it can.
+4. **Sudoku validity.** A claim with no recurrence (= looping), but still plenty of structure.
    place the two sides prove genuinely different statements (see §4).
 
-Each section shows the code each side wrote, complete with imports, then its numbers. The
-zkFOL definitions the benchmark ran are collected in [`zkfol/definitions.ex`](zkfol/definitions.ex).
+Each section shows zkFOL code side-by-side with zkVM code, complete with imports, and then benchmark numbers.
+The clean and concise zkFOL source code for running the benchmarks is collected in [`zkfol/definitions.ex`](zkfol/definitions.ex).
 
 **Machine:** AMD Ryzen 7 5700X (8c/16t), Linux, CPU proving only, one prover at a time.
 **Versions:** zkFOL 0.4.0 (zinc-plus `66776a3`; §2 on `7cf72c4`), RISC Zero 3.0.5, SP1 6.3.1,
@@ -37,14 +36,14 @@ bounds-check cell.
 
 ## 1. fib(10,000) mod 7919
 
-Everyone proves fib(10,000) mod 7919 by fast doubling, 14 rounds instead of 10,000 steps.
-The zkVM guests use a hand-written `fast_doubling` (source below). zkFOL is handed
-`defrel fibm`, the naive two-call recurrence, and `Zkfol.Doubling` rewrites it to the
-doubling form.
+A standard benchmark for zk-based systems is to compute fib in a finite field.
+We use fib(10,000) mod 7919 by fast doubling, 14 rounds instead of 10,000 steps.
+The zkVM guests use a hand-written `fast_doubling` (source below).
+zkFOL is handed `defrel fibm`, which is the naive two-call recurrence, and `Zkfol.Doubling` rewrites it to the doubling form.
+This illustrates a benefit of programming in a high-level language for an optimising compiler: you provide the spec, and it provides the efficient implementation.
 
-The table also carries zkFOL **without the mod**: `defrel fib`, the same rewrite over the
-exact 2,090-digit integer rather than a four-digit residue. It is there because it is the
-harder claim and still beats every zkVM row, so the mod is not what buys the win.
+The table also carries zkFOL **without the mod**: `defrel fib`, the same rewrite over the same 2,090-digit integer but without mod arithmetic.
+Note that even though this is a harder computation, zkFOL exact integer performance /still/ handily beats every zkVM.  A fairer comparison, in which the the zkVMs were asked to emulate full integer arithmetic, would reflect even better on zkFOL.
 
 ![prover time and prover memory, fib(10,000) mod 7919, fast doubling](prove_fib10000.svg)
 
@@ -114,11 +113,11 @@ Prove, zkVM over zkFOL: 321× / 1,280× / 1,160× / 4,290× against the reduced 
 370× / 1,480× / 1,330× / 4,930× against the unreduced one — which computes the whole
 integer while the guests compute its remainder. Memory: over 30× / 130× / 900× / 1,700×.
 
-## 2. The floor: a bounds check
+## 2. The floor: a bounds (= range) check
 
-Prove that a committed x lies in [10, 100]. Nothing to compute, so this is the price of
-a proof at all. RISC Zero charges the same 32,768 cycles here as for fast doubling and for
-n = 1; the zkVM columns are unchanged from section 1 because the work never left the floor.
+Prove that a committed x lies in [10, 100], with no other computation.
+RISC Zero charges the same 32,768 cycles as for fast doubling and for
+n = 1; the zkVM columns are unchanged from section 1.
 
 ![prover time and prover memory, bounds check](prove_bounds.svg)
 
@@ -162,9 +161,8 @@ Prove, zkVM over zkFOL: 2,420× / 9,600× / 8,650× / 32,200×. Memory: 100× / 
 
 ## 3. Each system's default route
 
-The zkVMs run the zkbenchmarks.com program unchanged: the linear loop, in their headline
-proof mode. zkFOL runs `defrel regsm`, the same linear loop as a relation, for a like-for-like
-row, and `defrel fib`, the way a user would write it, on the exact 2,090-digit integer.
+The zkVMs run the zkbenchmarks.com program unchanged: the linear loop, in their headline proof mode.
+zkFOL runs `defrel regsm`, the same linear loop as a relation, for a like-for-like row, and `defrel fib`, the way a user would write it, on the exact 2,090-digit integer.
 
 ![prover time and prover memory, fib(10,000) on each system's default route](prove_default.svg)
 
@@ -225,26 +223,21 @@ end
 | [SP1 compressed](sp1/program/src/main.rs#L14-L24)             | fib(10,000) mod 7919, linear | 50.39 s | 35.2 ms |  1.27 MB |      17.07 GB |
 | [Jolt](jolt/guest/src/lib.rs#L6-L18)                          | fib(10,000) mod 7919, linear |  2.38 s | 78.2 ms |  82.2 KB |        351 MB |
 
-Jolt is the zkVM to watch here: 2.38 s and 351 MB, 17× and 21× under RISC Zero succinct
-and SP1 compressed on prove, but its verify (78 ms) is the slowest column in the table and
-it is still 2.0× slower than `regsm` on the like-for-like linear row and 238× slower than
-`fib` doubled. Its trace is 262,144 steps for the 10,000-step loop.
+Note the entry for Jolt: 2.38 s and 351 MB, 17× and 21× under RISC Zero succinct and SP1 compressed on prove; however, its verify (78 ms) is the slowest column in the table and it is still 2.0× slower than `regsm` on the like-for-like linear row and 238× slower than `fib` doubled.
+Its trace is 262,144 steps for the 10,000-step loop.
 
-Read the loss column too: on `regsm` zkFOL's verify (34 ms) and proof (923 KB) grow with
-the number of steps, while the zkVM's stay constant. `fib` has neither problem because
-the compiler rewrites it to doubling, which is why that is the route a user gets by
-default.
+Note also the loss column: on `regsm` zkFOL's verify (34 ms) and proof (923 KB) grow with the number of steps, while the zkVM's stay constant.
+zkFOL's `fib` has neither problem, because the compiler optimises it to fast doubling.  This optimising route is the one a user gets by default.
 
 ## 4. Sudoku: a completed grid is valid
 
-A different shape of claim: no recurrence, just structure. Each of the 3n groups — n rows,
-n columns, n b×b boxes — must be a permutation of {1,…,n}.
+Each of the 3n groups — n rows, n columns, n b×b boxes — must be a permutation of {1,…,n}.
 
-The two sides are **not proving the same thing**, and the difference matters more than the
-timings. The zkVM guests take a finished grid and commit it, so they prove *"this public
-grid is valid"*. zkFOL proves *"a grid exists satisfying these clues"* — it reports
-`public_cols: 0` with `claims: []`, so nothing of the grid is disclosed, where the guests
-publish all of it.
+Note that (as for `fib`), what zkFOL does is not only faster but also inherently much more powerful.
+The two methods are **proving different things**.
+
+The zkVM guests take a finished grid and commit it, so they prove *"this public grid is valid"*; the guests publish the witness.
+In contrast, zkFOL proves *"a grid exists satisfying these clues"* — it reports `public_cols: 0` with `claims: []`, so nothing of the grid is disclosed.
 
 ![prover time and prover memory, sudoku 9x9 and 16x16](prove_sudoku.svg)
 
@@ -347,11 +340,12 @@ fn main() {
 </td></tr></table>
 
 The guests **construct** the 3n groups into a `Vec<Vec<u32>>` and walk each with a `seen`
-array; the transposition is imperative data movement done beside the grid. zkFOL says
+array; the transposition is imperative data movement done beside the grid.
+zkFOL says
 `column(x, cols)` and `boxes(blocks, x, bs)` as relations and `each(all_distinct, …)` over
 them — the rearrangements are read off the grid's own cells. `all_distinct` lowers to
-`all_dif` for AL and to `Zkfol.Ast.distinct` for the proof. The two zkVM guests are
-character-identical apart from entrypoint boilerplate and their read/commit calls.
+`all_dif` for AL and to `Zkfol.Ast.distinct` for the proof.
+The two zkVM guests are character-identical apart from entrypoint boilerplate and their read/commit calls.
 
 | system                                                   | grid  |     prove |   verify |    proof | prover memory |    cycles |
 |-----------------------------------------------------------|-------|----------:|---------:|---------:|--------------:|----------:|
@@ -372,7 +366,7 @@ character-identical apart from entrypoint boilerplate and their read/commit call
 Jolt's rows use separate exact-size guests for 4×4, 9×9, and 16×16
 ([`sudoku4`, `sudoku9`, `sudoku16`](jolt/guest/src/lib.rs#L59-L75)), each taking the grid
 as a fixed `[[u32; N]; N]` argument. Each public input contains the same number of cells as
-the corresponding RISC Zero and SP1 row, without padding or dynamic guest serialization. The
+the corresponding RISC Zero and SP1 row, without padding or dynamic guest serialisation. The
 guest is the same seen-array walk as the RISC Zero / SP1 one, written over the fixed array
 rather than a `Vec`. The 4×4 row has no RISC Zero / SP1 partner in this table because those
 sit in the pad table below.
@@ -395,11 +389,11 @@ on every prove cell in this section; on verify it sits with SP1 core at the slow
 
 The rows above all prove a completed grid, which is the only thing the zkVM guests can
 express: their `main` reads a grid, commits it, and asserts each group is a permutation.
-There is no path in either guest from the seventeen clues to the grid — a solver would have
+There is no path in either guest from the seventeen clues to the grid; a solver would have
 to be written as a guest program and proved as one, and it is not what these benchmarks run.
 
-zkFOL derives the grid from the clues directly, because the relations run in both
-directions: the same `solved/1` that checks a grid also answers one.
+zkFOL is more powerful and derives the grid from the clues directly.
+Being logic-based rather than imperative, relations can be run in any direction: the same `solved/1` that checks a grid, also answers one.
 
 | | solve the 9×9 from its seventeen clues |
 |---|---|
@@ -407,14 +401,12 @@ directions: the same `solved/1` that checks a grid also answers one.
 | RISC Zero | not expressible — the guest checks a grid it is handed |
 | SP1 | not expressible — the guest checks a grid it is handed |
 
-That is a capability difference, not a speed one, so it does not belong in the prove
-columns: the proved rows above are a grid the prover already holds, which is the ordinary
-shape of a zero-knowledge proof. It is worth stating because "prove sudoku validity" and
-"solve a sudoku and prove the answer" are different products, and only one system here
-offers the second. The 16×16 has nothing to solve — its head names every cell — so this
+Note that that highlights a distinction in capability, not just speed.
+The proved rows above are a grid the prover already holds, which is the ordinary
+shape of a zero-knowledge proof. "Prove sudoku validity" and "solve a sudoku and prove the answer" are different problems, and only zkFOL here offers the latter. The 16×16 has nothing to solve — its head names every cell — so this
 applies to the 9×9 alone.
 
-**The cost tracks the pad, not the puzzle.** A third grid size makes this plain. From 4×4 to
+**The cost tracks the pad (not the puzzle).** A third grid size illustrates the point. From 4×4 to
 16×16 the guest cycles rise 6.9× (27,406 → 188,519) while SP1 compressed moves 49.493 s →
 50.169 s, under 1.4%. RISC Zero composite is flat 7.314 s → 7.252 s from 4×4 to 9×9, both
 padding to 65,536 cycles, and only doubles at 16×16 when the pad doubles to 131,072.
@@ -432,10 +424,9 @@ zkFOL is the only column that responds to the puzzle at all: it rises from 9×9 
 while SP1 compressed *falls* 0.3% over the same step. Jolt does move, 2.3× from 4×4 to
 16×16, but with its trace length: 4,096 → 16,384 → 32,768, each the next power of two
 above the guest's step count. It pays for the pad like the others, only its pad is
-finer and its per-step cost far lower. Read the zkFOL rise as a direction,
-not a factor — the 16×16 relation drops the range checks, so it understates the true cost of
-the larger grid. That direction is the point: one column pays for the claim, the other for
-the machine.
+finer and its per-step cost far lower.
+Read the zkFOL rise as indicative: the 16×16 relation drops the range checks, so it understates the true cost of
+the larger grid. Intuitively: one column pays for the claim, the other for the machine.
 
 The zkFOL 4×4 cell is empty because no order-two relation exists: `families` and
 `families16` hard-code box side 3 and 4, and the generic `sudoku/2` cannot stand in for them
@@ -456,9 +447,9 @@ on the small rows, 500 MB on `regsm`, 1.5 GB on the linear exact row. The increm
 order-dependent when rows run back to back in one VM — `regsm` measured 0, 205 and
 210 MB across three runs as the heap settled — so treat it as a band, not a point.
 
-## Caveats that ship with the tables
+## Some caveats:
 
-- **CPU only, one box.** zkVM prove times are hardware- and contention-sensitive (RISC
+- **CPU only, and one box.** zkVM prove times are hardware- and contention-sensitive (RISC
   Zero fib(1000) measured 33 s contended vs 18 s uncontended on this machine). SP1's ~1 s
   setup is excluded from its prove column.
 - **Groth16 wraps are not measured** (Docker); vendor figures are unverified here. Wrapped,
@@ -478,13 +469,12 @@ order-dependent when rows run back to back in one VM — `regsm` measured 0, 205
   run before the timer, matching the SP1 setup exclusion. Its peak RSS covers the whole host
   process, preprocessing included, like the other zkVM columns. Jolt has no recursive wrap,
   so it has no counterpart to the succinct/compressed rows.
-- **Sudoku is not like for like.** The zkVM guests commit the grid, so it is public;
-  zkFOL publishes none of it. Both prove a completed grid the prover holds — the solve in
-  §4 is a separate capability, measured separately, and is not in any prove column. Quote
-  the rows with the claim attached, not as a bare speed ratio.
+- **Sudoku is not like-for-like, and zkFOL is working harder for its benchmark.** The zkVM guests commit the grid, so it is public;
+  zkFOL keeps the grid private. Both prove a completed grid the prover holds — the solve in
+  §4 is a separate capability, measured separately, and is not in any prove column.
 - **Two zinc-plus revisions.** §1, §3 and §4 are `66776a3`; §2 is `7cf72c4`. The prover
   moves quickly between revisions — §1's proof grew from 49.8 KB to 269.8 KB across this
-  one — so figures from different revisions are not strictly comparable.
+  one.  Figures from different revisions may not be strictly comparable.
 
 ## Reproduce
 
