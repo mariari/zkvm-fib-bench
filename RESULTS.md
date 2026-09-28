@@ -2,9 +2,9 @@
 
 We benchmark the same computations on zkFOL, RISC Zero, SP1 and Jolt:
 
-1. **fib(10,000) mod 7919.** Fibonacci mod 7919 run to 10,000.  A standard benchmark in this space.
-2. **bounds check 10 ≤ x ≤ 100.** Just the cost of constraining (= doing a "range check" on) an argument.
-3. **fib(10,000).** The Fibonacci function on integers, like you learned in school.  zkVM-based approaches typically do /not/ do this because their notion of number is based on finite fields; zkFOL is integer-based, so it can.
+1. **fib(10,000) mod 7919.** Fibonacci mod 7919 run to 10,000.  A standard zk-benchmark.
+2. **bounds check 10 ≤ x ≤ 100.** Just the cost of proving a bound (= range check) on an argument.
+3. **fib(10,000).** The Fibonacci function on full integers without mod arithmetic, just like we learn in school.  zkVM-based approaches typically do /not/ compute this because their notion of number is finite field elements; zkFOL is integer-based, so it can.
 4. **Sudoku validity.** A claim with no recurrence (= looping), but still plenty of structure.
    place the two sides prove genuinely different statements (see §4).
 
